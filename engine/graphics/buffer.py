@@ -23,7 +23,7 @@ class FramebufferObject:
     @classmethod
     def clean_all(cls):
         print(f"{consts.RUN_TIME:.5f} | ---- CLEANING FRAMEBUFFER OBJECTS ----")
-        for fbo in cls.FRAMEBUFFER_OBJECTS:
+        for fbo in cls.FRAMEBUFFER_OBJECTS.values():
             print(f"{consts.RUN_TIME:.5f} |", fbo._uuid)
             fbo.clean(clean_func=True)
 

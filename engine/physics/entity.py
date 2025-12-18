@@ -66,6 +66,13 @@ class Entity:
         for i in self._components.values():
             i.__post_init__()
 
+    def get_component(self, component_class: type):
+        """Get the first component of the specified type, or None if not found."""
+        for component in self._components.values():
+            if isinstance(component, component_class):
+                return component
+        return None
+
     def get_components(self, component_class: type):
         return [
             component

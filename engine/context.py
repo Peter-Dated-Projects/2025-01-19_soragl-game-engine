@@ -97,6 +97,10 @@ def init():
         vertex_shader=shader.Shader("assets/shaders/default-post-vertex.glsl"),
         fragment_shader=shader.Shader("assets/shaders/default-post-fragment.glsl"),
     )
+    # Set depth visualization uniforms (near and far plane)
+    consts.MGL_FRAMEBUFFER_SHADER["u_near"] = 0.1
+    consts.MGL_FRAMEBUFFER_SHADER["u_far"] = 50.0
+
     consts.MGL_FRAMEBUFFER_VAO = buffer.VAOObject(
         consts.MGL_FRAMEBUFFER_SHADER,
         [(consts.MGL_FRAMEBUFFER_VBO(), "3f 2f", "in_position", "in_texcoords")],
