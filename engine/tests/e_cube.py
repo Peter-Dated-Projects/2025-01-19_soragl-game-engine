@@ -20,6 +20,7 @@ class CubeEntity(entity.Entity):
         zlayer: int = 0,
         shader_program: shader.ShaderProgram = None,
         complete_vert_data: list[tuple] = None,
+        shared_vao: buffer.VAOObject = None,
     ):
         super().__init__(name, zlayer)
 
@@ -27,6 +28,7 @@ class CubeEntity(entity.Entity):
         self._c_mesh = None
         self._shader_program = shader_program
         self._complete_vert_data = complete_vert_data
+        self._shared_vao = shared_vao
 
         # create model
         self._model_rman = glm.mat4()
@@ -52,22 +54,26 @@ class CubeEntity(entity.Entity):
     def __post_init__(self):
         # create objects
         # create default cube object
+        # If shared VAO is provided, use it; otherwise create a new one
+        if self._shared_vao:
+            vao_to_use = self._shared_vao
+        else:
+            vao_to_use = buffer.VAOObject(
+                self._shader_program,
+                [
+                    (
+                        self._complete_vert_data(),
+                        "3f 2f 1f",
+                        "in_position",
+                        "in_texcoords",
+                        "in_tex",
+                    )
+                ],
+            )
+
         self._c_mesh = self.add_component(
             c_mesh.MeshComponent(
-                buffer.RenderingManifold(
-                    vao=buffer.VAOObject(
-                        self._shader_program,
-                        [
-                            (
-                                self._complete_vert_data(),
-                                "3f 2f 1f",
-                                "in_position",
-                                "in_texcoords",
-                                "in_tex",
-                            )
-                        ],
-                    )
-                )
+                buffer.RenderingManifold(vao=vao_to_use)
             )
         )
 

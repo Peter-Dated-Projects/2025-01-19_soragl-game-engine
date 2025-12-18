@@ -215,6 +215,27 @@ class Texture:
     # logic
     # ------------------------------------------------------------------------ #
 
+    def update_from_surface(self, surface: pygame.Surface):
+        """Update texture data from a pygame Surface without creating new texture.
+
+        This method updates the existing GPU texture data instead of allocating
+        a new texture, preventing memory leaks when updating textures every frame.
+
+        Args:
+            surface: pygame.Surface to update the texture with
+        """
+        if not self._texture:
+            print(__file__, "Cannot update texture: texture not initialized")
+            return
+
+        # Convert surface to bytes and write to existing texture
+        image_data = pygame.image.tostring(
+            pygame.transform.flip(surface, flip_y=self._yflip, flip_x=self._xflip),
+            "RGBA",
+            False,
+        )
+        self._texture.write(image_data)
+
     def clean(self, clean_func: bool = False):
         self._texture.release()
 

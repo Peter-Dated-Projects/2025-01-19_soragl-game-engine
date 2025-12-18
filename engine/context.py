@@ -184,7 +184,7 @@ def run():
 
         consts.CTX_INPUT_HANDLER.update()
 
-        if consts.CTX_INPUT_HANDLER.get_keyboard_pressed(pygame.K_SPACE):
+        if consts.CTX_INPUT_HANDLER.get_keyboard_pressed(pygame.K_e):
 
             # stage 1: render pass #1
             consts.MGL_FRAMEBUFFER.use_framebuffer()
@@ -218,11 +218,12 @@ def run():
 
     # clear up all game states
     consts.CTX_GAMESTATE_MANAGER.__on_clean__()
-    # clean up textures + shaders + buffers + vaos
+    # clean up textures + shaders + buffers + vaos + framebuffers
     texture.Texture.__on_clean__()
     shader.ShaderProgram.__on_clean__()
     buffer.GLBufferObject.__on_clean__()
     buffer.VAOObject.__on_clean__()
+    buffer.FramebufferObject.clean_all()
 
     pygame.quit()
 

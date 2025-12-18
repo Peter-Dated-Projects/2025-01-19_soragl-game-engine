@@ -42,6 +42,8 @@ from engine.graphics import spritesheet
 from engine.graphics import constants as gfx_consts
 
 from engine.graphics.ecs import c_mesh
+from engine.graphics.ecs import c_cameracontroller
+from engine.graphics.ecs import c_mouselock
 
 from engine.io import resourcemanager
 from engine.io import inputhandler
@@ -376,12 +378,27 @@ shader_program = shader.ShaderProgram(
 # create 100 random entities spinning and slightly moving up and down
 from engine.tests import e_cube
 
+# Create shared VAO once for all cubes (optimization to reduce GPU resource usage)
+shared_cube_vao = buffer.VAOObject(
+    shader_program,
+    [
+        (
+            complete_vert_data(),
+            "3f 2f 1f",
+            "in_position",
+            "in_texcoords",
+            "in_tex",
+        )
+    ],
+)
+
 for i in range(100):
     consts.CTX_WORLD.add_entity(
         e_cube.CubeEntity(
             name=f"cube-{i}",
             shader_program=shader_program,
             complete_vert_data=complete_vert_data,
+            shared_vao=shared_cube_vao,
         )
     )
 
@@ -408,6 +425,15 @@ rman = render_entity.add_component(
 
 rman().set_texture(0, texture.Texture(raw_image=consts.W_FRAMEBUFFER))
 
+# Create persistent texture for framebuffer updates (prevents memory leak)
+# This texture is reused every frame instead of creating new textures
+framebuffer_texture_slot0 = texture.Texture.create_non_file_texture(
+    width=consts.FRAMEBUFFER_WIDTH,
+    height=consts.FRAMEBUFFER_HEIGHT,
+    channels=4,
+    color_buffer=True
+)
+
 m_model_rman = glm.mat4()
 
 rman().write_uniform("m_model", m_model_rman)
@@ -416,13 +442,15 @@ rman().write_uniform("m_view", _3dcam._view)
 
 
 def sub_task1():
-    global m_model_rman, rman
+    global m_model_rman, rman, framebuffer_texture_slot0
     result = glm.scale(m_model_rman, glm.vec3(0.2))
     result = glm.translate(result, glm.vec3(0, math.sin(consts.RUN_TIME) * 20, 0))
     result = glm.rotate(result, consts.RUN_TIME, glm.vec3(0, 1, 0))
 
     rman().write_uniform("m_model", result)
-    rman().set_texture(0, texture.Texture(raw_image=consts.W_FRAMEBUFFER))
+    # Update texture data instead of creating new texture (prevents memory leak)
+    framebuffer_texture_slot0.update_from_surface(consts.W_FRAMEBUFFER)
+    rman().set_texture(0, framebuffer_texture_slot0)
     rman().set_texture(1, texture.Texture.get_texture("assets/snowman.jpg"))
 
 
@@ -532,6 +560,15 @@ rman3 = render_entity3.add_component(
 
 rman3().set_texture(0, texture.Texture(raw_image=consts.W_FRAMEBUFFER))
 
+# Create persistent texture for framebuffer updates (prevents memory leak)
+# This texture is reused every frame instead of creating new textures
+framebuffer_texture_slot0_copy = texture.Texture.create_non_file_texture(
+    width=consts.FRAMEBUFFER_WIDTH,
+    height=consts.FRAMEBUFFER_HEIGHT,
+    channels=4,
+    color_buffer=True
+)
+
 m_model_rman3 = glm.mat4()
 m_model_rman3 = glm.rotate(m_model_rman3, math.pi / 2, glm.vec3(1, 0, 0))
 m_model_rman3 = glm.translate(m_model_rman3, glm.vec3(0, 0, 20))
@@ -545,81 +582,88 @@ rman3().write_uniform("m_view", _3dcam._view)
 
 
 def sub_task3():
-    global rman3, m_model_rman3
+    global rman3, m_model_rman3, framebuffer_texture_slot0_copy
 
-    rman3().set_texture(0, texture.Texture(raw_image=consts.W_FRAMEBUFFER))
+    # Update texture data instead of creating new texture (prevents memory leak)
+    framebuffer_texture_slot0_copy.update_from_surface(consts.W_FRAMEBUFFER)
+    rman3().set_texture(0, framebuffer_texture_slot0_copy)
     # rman3().set_texture(0, consts.MGL_FRAMEBUFFER.get_color_attachments()[0])
 
 
 render_entity3.add_component(c_task.TaskComponent("sub_task", sub_task3))
 
 
-# load the bugatti model and render it
-cat_shader = shader.ShaderProgram(
-    vertex_shader=shader.Shader("assets/shaders/model-vertex.glsl"),
-    fragment_shader=shader.Shader("assets/shaders/model-fragment.glsl"),
+# # load the bugatti model and render it
+# cat_shader = shader.ShaderProgram(
+#     vertex_shader=shader.Shader("assets/shaders/model-vertex.glsl"),
+#     fragment_shader=shader.Shader("assets/shaders/model-fragment.glsl"),
+# )
+# c_name, c_material = pywavefront.Wavefront(
+#     "assets/models/cat/20430_Cat_v1_NEW.obj", parse=True
+# ).materials.popitem()
+# c_vdata = buffer.GLBufferObject(np.array(c_material.vertices, dtype="float32"))
+# c_tex = texture.Texture.get_texture(
+#     "assets/models/cat/20430_cat_diff_v1.jpg", yflip=True
+# )
+
+# cat_entity = consts.CTX_WORLD.add_entity(entity.Entity(name="cat model"))
+
+# cat_model_mesh = cat_entity.add_component(
+#     c_mesh.MeshComponent(
+#         buffer.RenderingManifold(
+#             vao=buffer.VAOObject(
+#                 cat_shader,
+#                 [
+#                     (
+#                         c_vdata(),
+#                         "2f 3f 3f",
+#                         "in_texcoords",
+#                         "in_normal",
+#                         "in_position",
+#                     )
+#                 ],
+#             ),
+#             tex_count=1,
+#         )
+#     )
+# )
+
+# model = glm.mat4()
+# model = glm.rotate(model, -math.pi / 2, glm.vec3(1, 0, 0))
+# model = glm.scale(model, glm.vec3(0.3))
+
+# cat_model_mesh().write_uniform("m_model", model)
+# cat_model_mesh().write_uniform("m_proj", _3dcam._projection)
+# cat_model_mesh().write_uniform("m_view", _3dcam._view)
+# cat_model_mesh().set_texture(0, c_tex)
+
+
+# Add mouse lock component (must be added before camera controller)
+mouse_lock = _3dcam.add_component(
+    c_mouselock.MouseLockComponent(start_locked=True)
 )
-c_name, c_material = pywavefront.Wavefront(
-    "assets/models/cat/20430_Cat_v1_NEW.obj", parse=True
-).materials.popitem()
-c_vdata = buffer.GLBufferObject(np.array(c_material.vertices, dtype="float32"))
-c_tex = texture.Texture.get_texture(
-    "assets/models/cat/20430_cat_diff_v1.jpg", yflip=True
+
+# Add camera controller for keyboard input handling
+camera_controller = _3dcam.add_component(
+    c_cameracontroller.CameraController3D(move_speed=10.0, rotation_speed=3.0)
 )
 
-cat_entity = consts.CTX_WORLD.add_entity(entity.Entity(name="cat model"))
 
-cat_model_mesh = cat_entity.add_component(
-    c_mesh.MeshComponent(
-        buffer.RenderingManifold(
-            vao=buffer.VAOObject(
-                cat_shader,
-                [
-                    (
-                        c_vdata(),
-                        "2f 3f 3f",
-                        "in_texcoords",
-                        "in_normal",
-                        "in_position",
-                    )
-                ],
-            ),
-            tex_count=1,
-        )
-    )
-)
-
-model = glm.mat4()
-model = glm.rotate(model, -math.pi / 2, glm.vec3(1, 0, 0))
-model = glm.scale(model, glm.vec3(0.3))
-
-cat_model_mesh().write_uniform("m_model", model)
-cat_model_mesh().write_uniform("m_proj", _3dcam._projection)
-cat_model_mesh().write_uniform("m_view", _3dcam._view)
-cat_model_mesh().set_texture(0, c_tex)
-
-
-# make camera rotate around entire world
-def camera_task():
-    global _3dcam, shader_program
-    _3dcam.position = glm.vec3(
-        10 * math.sin(consts.RUN_TIME),
-        _campos.y,
-        10 * math.cos(consts.RUN_TIME),
-    )
-    _3dcam.target = glm.vec3(0, 0, 0)
-
+# Update shader view matrices and print debug info
+def camera_shader_update():
+    global _3dcam, shader_program, shader_program2
     # update data in shader
     shader_program["m_view"].write(_3dcam._view)
     shader_program2["m_view"].write(_3dcam._view)
-    cat_model_mesh().write_uniform("m_view", _3dcam._view)
 
     # print out fps
     print(f"{consts.RUN_TIME:.5f} | FPS: {consts.W_CLOCK.get_fps()}")
+    print(f"{consts.RUN_TIME:.5f} | CAMERA POS: {_3dcam.position}")
     print(f"{consts.RUN_TIME:.5f} | CAMERA UP: {_3dcam.up}")
 
 
-_3dcam.add_component(c_task.TaskComponent("camera_task", camera_task))
+_3dcam.add_component(c_task.TaskComponent("camera_shader_update", camera_shader_update))
+
 # ======================================================================== #
 # run game
 # ======================================================================== #

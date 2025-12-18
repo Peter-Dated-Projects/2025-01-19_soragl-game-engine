@@ -16,7 +16,8 @@ class Shader:
     # ------------------------------------------------------------------------ #
 
     def get_shader_code(self) -> str:
-        return open(self._file_path, "r").read()
+        with open(self._file_path, "r") as f:
+            return f.read()
 
 
 # ======================================================================== #
