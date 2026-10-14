@@ -1,4 +1,4 @@
-import glm
+from pyglm import glm
 import pygame
 
 ENGINE_NAME = "SORAGL"

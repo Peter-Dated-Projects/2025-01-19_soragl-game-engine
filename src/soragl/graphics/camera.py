@@ -1,4 +1,4 @@
-import glm
+from pyglm import glm
 
 
 from soragl import state

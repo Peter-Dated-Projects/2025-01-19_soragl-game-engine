@@ -373,7 +373,7 @@ requires-dist = [
     { name = "moderngl", specifier = ">=5.12" },
     { name = "numpy", specifier = ">=2.0" },
     { name = "pygame-ce", specifier = ">=2.5" },
-    { name = "pyglm", specifier = ">=2.7" },
+    { name = "pyglm", specifier = ">=2.8" },
     { name = "pyopengl", specifier = ">=3.1" },
 ]
 

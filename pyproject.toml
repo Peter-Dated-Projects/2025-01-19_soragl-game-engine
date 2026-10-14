@@ -9,7 +9,7 @@ dependencies = [
     "moderngl>=5.12",
     "numpy>=2.0",
     "pygame-ce>=2.5",
-    "PyGLM>=2.7",
+    "PyGLM>=2.8",
     "PyOpenGL>=3.1",
 ]
 
@@ -29,6 +29,8 @@ module-name = "soragl"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
+# Box2D's SWIG bindings warn on import; nothing we can act on
+filterwarnings = ["ignore:builtin type .* has no __module__ attribute:DeprecationWarning"]
 
 [tool.ruff]
 src = ["src", "tests", "examples"]

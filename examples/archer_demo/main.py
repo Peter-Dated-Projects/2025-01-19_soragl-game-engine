@@ -3,7 +3,7 @@ import math
 import os
 from pathlib import Path
 
-import glm
+from pyglm import glm
 import pygame
 import numpy as np
 
