@@ -1,0 +1,39 @@
+[project]
+name = "soragl"
+version = "0.1.0"
+description = "A 2D/3D Python game engine built on pygame-ce and moderngl."
+readme = "README.md"
+requires-python = ">=3.11,<3.14"
+dependencies = [
+    "Box2D>=2.3.10",
+    "moderngl>=5.12",
+    "numpy>=2.0",
+    "pygame-ce>=2.5",
+    "PyGLM>=2.7",
+    "PyOpenGL>=3.1",
+]
+
+[build-system]
+requires = ["uv_build>=0.9.7,<0.10.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "ruff>=0.8",
+]
+
+[tool.uv.build-backend]
+module-name = "soragl"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff]
+src = ["src", "tests", "examples"]
+
+[tool.ruff.lint]
+select = ["E", "F", "N", "W"]
+# line length is the formatter's job
+ignore = ["E501"]
