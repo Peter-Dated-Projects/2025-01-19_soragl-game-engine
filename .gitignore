@@ -1,9 +1,20 @@
-.venv
-.vscode
-
-
+# environments / caches
+.venv/
+.vscode/
 **/__pycache__/
+.pytest_cache/
+.ruff_cache/
+dist/
+build/
+*.egg-info/
 
+# macOS
+.DS_Store
+
+# local 3D source assets
 *.obj
 *.mtl
 *.blend
+
+# harness scratch space
+.charm-workspace/
