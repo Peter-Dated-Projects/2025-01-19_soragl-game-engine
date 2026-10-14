@@ -80,14 +80,14 @@ class ECSHandler:
         del self._components[component.__class__][component._uuid]
 
     def iterate_components(self, component_class: type):
-        for component in self._components[component_class].values():
+        for component in self._components.get(component_class, {}).values():
             yield component
 
     def get_component(self, component_class: type, uuid):
         return self._components[component_class][uuid]
 
     def get_components(self, component_class: type) -> dict:
-        return self._components[component_class]
+        return self._components.get(component_class, {})
 
 
 # ======================================================================== #
