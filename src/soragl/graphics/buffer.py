@@ -5,10 +5,8 @@ import numpy as np
 
 from soragl import state
 
-from soragl.graphics import texture
-
 if TYPE_CHECKING:
-    from soragl.graphics import shader
+    from soragl.graphics import shader, texture
 
 logger = logging.getLogger(__name__)
 
@@ -36,15 +34,11 @@ class FramebufferObject:
 
     @classmethod
     def create_texture_attachment(cls, width: int, height: int, channels: int = 4):
-        return texture.Texture.create_non_file_texture(
-            width=width, height=height, channels=channels, color_buffer=True
-        )
+        return state.texture_manager.create_color_target(width, height, channels)
 
     @classmethod
-    def create_depth_attachment(cls, width: int, height: int, is_tex: bool = False):
-        return texture.Texture.create_non_file_texture(
-            width=width, height=height, channels=1, depth_buffer=True, is_tex=texture
-        )
+    def create_depth_attachment(cls, width: int, height: int):
+        return state.texture_manager.create_depth_target(width, height)
 
     @classmethod
     def cache(cls, fbo):
@@ -74,9 +68,9 @@ class FramebufferObject:
 
         # create framebuffer
         self._fbo = state.gl_context.framebuffer(
-            color_attachments=[x._texture for x in self._color_attachments],
+            color_attachments=[x.gl for x in self._color_attachments],
             depth_attachment=(
-                self._depth_attachment._texture if self._depth_attachment else None
+                self._depth_attachment.gl if self._depth_attachment else None
             ),
         )
 
@@ -142,11 +136,6 @@ class RenderingManifold:
 
         # clean if vao exists
         self._vao.clean()
-        for i, tex in self._textures:
-            if not tex:
-                continue
-            if not texture.Texture.is_cached(tex):
-                tex.clean()
         self._textures.clear()
 
     # ------------------------------------------------------------------------ #

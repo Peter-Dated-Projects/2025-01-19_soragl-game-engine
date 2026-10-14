@@ -59,8 +59,8 @@ class Camera3D(BaseCamera):
         forward: glm.vec3 = glm.vec3(0, 0, 1),
         up: glm.vec3 = glm.vec3(0, 1, 0),
         orthogonal: bool = False,
-        width: int = state.config.window_width,
-        height: int = state.config.window_height,
+        width: int | None = None,
+        height: int | None = None,
         orientation_lock: bool = False,
         orientation_lock_vec: glm.vec3 = glm.vec3(0, 1, 0),
     ):
@@ -80,8 +80,8 @@ class Camera3D(BaseCamera):
         self._forward = forward
         self._up = up  # We'll keep a true up vector, not derived from rotation.
         self._orthogonal = orthogonal
-        self._width = width
-        self._height = height
+        self._width = width if width is not None else state.config.window_width
+        self._height = height if height is not None else state.config.window_height
 
         # orientation lock
         self._lock_orientation = orientation_lock

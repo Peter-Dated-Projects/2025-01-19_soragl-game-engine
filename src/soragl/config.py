@@ -34,6 +34,11 @@ class EngineConfig:
 
     background_color: tuple[int, int, int] = (255, 0, 0)
 
+    audio_enabled: bool = True
+    audio_voices: int = 32
+    audio_frequency: int = 44100
+    audio_buffer: int = 512
+
     default_chunk_pixel_width: int = 4096
     default_chunk_pixel_height: int = 4096
 

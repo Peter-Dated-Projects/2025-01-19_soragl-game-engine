@@ -39,6 +39,8 @@ ecs_handler = None
 input_handler = None
 signal_handler = None
 resource_manager = None
+texture_manager = None
+audio = None
 game_state_manager = None
 world = None
 
@@ -50,6 +52,7 @@ def reset():
     global gl_framebuffer_shader, gl_framebuffer_rendering_manifold
     global window_surface, framebuffer_surface, clock
     global ecs_handler, input_handler, signal_handler, resource_manager
+    global texture_manager, audio
     global game_state_manager, world
 
     config = EngineConfig()
@@ -59,4 +62,5 @@ def reset():
     gl_framebuffer_shader = gl_framebuffer_rendering_manifold = None
     window_surface = framebuffer_surface = clock = None
     ecs_handler = input_handler = signal_handler = resource_manager = None
+    texture_manager = audio = None
     game_state_manager = world = None
