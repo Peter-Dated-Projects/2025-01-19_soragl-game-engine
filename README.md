@@ -103,12 +103,18 @@ audio call becomes a no-op.
 ### 2D games
 
 ```python
+import pygame
+import soragl
+from soragl import state
+from soragl.config import EngineConfig
+from soragl.system.game_state import GameState
+
 soragl.init(EngineConfig(render_mode="2d", framebuffer_width=480, framebuffer_height=270))
 
 
 class Play(GameState):
     def update(self):
-        state.framebuffer_surface.blit(hero_image, (100, 100))   # draw with pygame
+        pygame.draw.circle(state.framebuffer_surface, (255, 200, 80), (240, 135), 20)
 
 
 state.game_state_manager.add_game_state("play", Play("play"))
