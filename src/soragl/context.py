@@ -11,6 +11,7 @@ from soragl.system import game_state
 
 from soragl.graphics import buffer
 from soragl.graphics import shader
+from soragl.graphics import presenter
 from soragl.graphics import texture
 
 from soragl.audio import engine as audio_engine
@@ -108,6 +109,19 @@ def init(config: EngineConfig | None = None):
 
     state.signal_handler.register_signal("SORA_ENTITY_DEATH", [entity.Entity])
 
+    if state.config.render_mode == "2d":
+        state.presenter = presenter.SurfacePresenter(
+            state.gl_context,
+            state.texture_manager,
+            state.framebuffer_surface.get_size(),
+            scaling=state.config.present_scaling,
+            integer_scale=state.config.present_integer_scale,
+        )
+    else:
+        _create_post_processing_pass()
+
+
+def _create_post_processing_pass():
     state.gl_framebuffer_vbo = buffer.GLBufferObject(
         np.hstack(
             [
@@ -144,107 +158,94 @@ def init(config: EngineConfig | None = None):
         ),
     )
 
-    # ------------------------------------------------------------------------ #
-
 
 def run():
-    # run game
+    """Run the game loop until the window closes or `stop()` is called."""
     state.running = True
-
-    # begin the game loop
     state.start_time = time.time()
     state.end_time = state.start_time
     state.run_time = 0
 
-    # ------------------------------------------------------------------------ #
-    # testing
-
-    # get opengl data
     logger.info("OpenGL version: %s", glGetString(GL_VERSION).decode())
     logger.info("GLSL version: %s", glGetString(GL_SHADING_LANGUAGE_VERSION).decode())
 
-    state.gl_context.enable(flags=mgl.DEPTH_TEST)
-    glDepthFunc(GL_LEQUAL)
-    # glEnable(GL_BLEND)
-    # glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-
-    # ------------------------------------------------------------------------ #
+    if state.config.render_mode == "3d":
+        state.gl_context.enable(flags=mgl.DEPTH_TEST)
+        glDepthFunc(GL_LEQUAL)
 
     while state.running:
-        # stop()
-        # ------------------------------------------------------------------------ #
-        # time
-        # ------------------------------------------------------------------------ #
-        logger.debug(
-            "===================== START NEW LOOP ================================"
-        )
-        # calculate delta time
-        state.start_time = time.time()
-        state.delta_time = state.start_time - state.end_time
-        state.end_time = state.start_time
-        state.run_time += state.delta_time
-
-        # ------------------------------------------------------------------------ #
-        # events
-        # ------------------------------------------------------------------------ #
-
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                state.running = False
-
-            # window resize events
-            if event.type == pygame.VIDEORESIZE:
-                state.config.window_width = event.w
-                state.config.window_height = event.h
-
-        # ------------------------------------------------------------------------ #
-        # reset + clearing
-        # ------------------------------------------------------------------------ #
-
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-        state.gl_framebuffer().clear(*state.config.background_color, depth=1.0)
-        state.framebuffer_surface.fill(state.config.background_color)
-
-        # ------------------------------------------------------------------------ #
-        # updating + drawing
-        # ------------------------------------------------------------------------ #
-
+        _advance_time()
+        _poll_events()
         state.input_handler.update()
 
-        if state.input_handler.get_keyboard_pressed(pygame.K_e):
-            # stage 1: render pass #1
-            state.gl_framebuffer.use_framebuffer()
-
-            # update game state
-            state.game_state_manager.update()
-            state.signal_handler.handle()
-
-            # stage 2: render pass #2
-            state.gl_context.screen.use()
-            state.gl_framebuffer.get_color_attachments()[0].use(location=1)
-            state.gl_framebuffer.get_depth_attachment().use(location=2)
-            state.gl_framebuffer_rendering_manifold.handle()
+        if state.config.render_mode == "2d":
+            _frame_2d()
         else:
-            # render to screen directly
-            state.gl_context.screen.use()
-
-            state.game_state_manager.update()
-            state.signal_handler.handle()
+            _frame_3d()
 
         state.audio.update()
-
-        # update window
         pygame.display.flip()
         state.clock.tick(state.config.window_fps)
 
-    # ------------------------------------------------------------------------ #
-    # final cleaning
-    # ------------------------------------------------------------------------ #
+    _shutdown()
+
+
+def _advance_time():
+    state.start_time = time.time()
+    state.delta_time = min(
+        state.start_time - state.end_time, state.config.max_delta_time
+    )
+    state.end_time = state.start_time
+    state.run_time += state.delta_time
+
+
+def _poll_events():
+    state.events = pygame.event.get()
+    for event in state.events:
+        state.input_handler.process_event(event)
+        if event.type == pygame.QUIT:
+            state.running = False
+        elif event.type == pygame.VIDEORESIZE:
+            state.config.window_width = event.w
+            state.config.window_height = event.h
+
+
+def _update_game():
+    state.game_state_manager.update()
+    state.signal_handler.handle()
+
+
+def _frame_2d():
+    state.framebuffer_surface.fill(state.config.background_color)
+    _update_game()
+    state.presenter.present(state.framebuffer_surface, window_size())
+
+
+def _frame_3d():
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+    state.gl_framebuffer().clear(*state.config.background_color, depth=1.0)
+    state.framebuffer_surface.fill(state.config.background_color)
+
+    # holding E shows the post-processing pass (depth visualisation)
+    if state.input_handler.get_keyboard_pressed(pygame.K_e):
+        state.gl_framebuffer.use_framebuffer()
+        _update_game()
+        state.gl_context.screen.use()
+        state.gl_framebuffer.get_color_attachments()[0].use(location=1)
+        state.gl_framebuffer.get_depth_attachment().use(location=2)
+        state.gl_framebuffer_rendering_manifold.handle()
+    else:
+        state.gl_context.screen.use()
+        _update_game()
+
+
+def _shutdown():
     logger.info("===================== STOPPING GAME ================================")
 
-    # clear up all game states
     state.game_state_manager.__on_clean__()
-    # clean up textures + shaders + buffers + vaos + framebuffers
+    if state.presenter is not None:
+        state.presenter.release()
+    # audio and textures hold resources, so they go before the resource manager
     state.audio.shutdown()
     state.texture_manager.shutdown()
     state.resource_manager.clear()
@@ -257,6 +258,16 @@ def run():
     state.reset()
 
     logger.info("Game Stopped + Caches + Memory Cleaned")
+
+
+def window_size() -> tuple[int, int]:
+    """The window's size in OpenGL pixels, which differs from points on HiDPI screens."""
+    return pygame.display.get_window_size()
+
+
+def mouse_surface_position() -> tuple[float, float] | None:
+    """The mouse in `framebuffer_surface` pixels (2D mode), or None off the surface."""
+    return state.presenter.window_to_surface(pygame.mouse.get_pos(), window_size())
 
 
 def stop():
