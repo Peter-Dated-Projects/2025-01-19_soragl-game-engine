@@ -109,7 +109,9 @@ from soragl import state
 from soragl.config import EngineConfig
 from soragl.system.game_state import GameState
 
-soragl.init(EngineConfig(render_mode="2d", framebuffer_width=480, framebuffer_height=270))
+soragl.init(
+    EngineConfig(render_mode="2d", framebuffer_width=480, framebuffer_height=270)
+)
 
 
 class Play(GameState):
@@ -119,7 +121,7 @@ class Play(GameState):
 
 state.game_state_manager.add_game_state("play", Play("play"))
 state.game_state_manager.set_game_state("play")
-soragl.run()                                          # scaled to the window, pixels kept sharp
+soragl.run()  # scaled to the window, pixels kept sharp
 ```
 
 ## Layout
