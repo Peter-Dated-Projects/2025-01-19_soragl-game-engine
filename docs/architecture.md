@@ -29,14 +29,40 @@ the engine, which is why they are unit-tested without a window.
 
 ## Start-up, frame, shutdown
 
-`init(config)`: pygame and the OpenGL 3.3 core context, window, then `input_handler`,
-`signal_handler`, `ResourceManager`, `TextureManager`, `AudioEngine`, `GameStateManager`
-(which creates the default world), and finally the post-processing framebuffer.
+`init(config)` sets up these, in order:
 
-Each frame in `run()`: events, clear, `input_handler.update()`, then either a two-pass render
-(3D scene to the framebuffer, then the post shader; hold `E`) or a direct render. Both call
-`game_state_manager.update()` and `signal_handler.handle()`. `audio.update()` runs last so it
-sees this frame's positions. Then `display.flip()` and the frame limiter.
+1. pygame, the OpenGL 3.3 core context and the window.
+2. `input_handler`, `signal_handler`, `ResourceManager`, `TextureManager` and `AudioEngine`.
+3. `GameStateManager`, which creates the default world.
+4. Either the 3D post-processing framebuffer, or, when `render_mode="2d"`, the `SurfacePresenter`.
+
+Each frame in `run()`:
+
+1. Advance time. `delta_time` is capped at `config.max_delta_time`, so a stalled window does
+   not teleport anything.
+2. Poll events. They are forwarded to `InputHandler.process_event` and kept as `state.events`
+   for the frame.
+3. Call `input_handler.update()`.
+4. Draw the frame. Both modes call `game_state_manager.update()` and `signal_handler.handle()`.
+   - 3D: either a two-pass render (the scene to the framebuffer, then the post shader, while E
+     is held) or a direct render.
+   - 2D: clear `framebuffer_surface`, update, then present the surface.
+5. Call `audio.update()`, last, so it sees this frame's positions.
+6. `display.flip()` and the frame limiter.
+
+## 2D games
+
+Set `EngineConfig(render_mode="2d")` and draw everything with pygame into
+`state.framebuffer_surface`.
+
+- Each frame `SurfacePresenter` uploads that surface to a texture and draws it letterboxed to
+  fill the window. `present_scaling` picks the filter: `"sharp"` (sharp-bilinear: crisp pixels
+  at any scale, the default), `"nearest"` or `"linear"`. `present_integer_scale=True` limits the
+  scale to whole numbers.
+- `soragl.context.mouse_surface_position()` maps the mouse into surface pixels.
+- Scenes are `GameState` subclasses that override `update()`. `on_enter()` and `on_exit()` run
+  when `set_game_state`, `push_state` and `pop_state` switch scenes, and `__post_init__` runs
+  only the first time a state becomes current.
 
 Shutdown: game states, shader programs, buffers, VAOs, framebuffers, then `audio.shutdown()`,
 `texture_manager.shutdown()` and `resource_manager.clear()` in that order, then `state.reset()`.
@@ -84,8 +110,6 @@ silent by default. `soragl.system.log.configure(level)` prints to stderr.
 
 ## Known gaps
 
-- There is no built-in 2D presenter: the CPU `framebuffer_surface` only reaches the screen if
-  your game uploads it as a texture and draws it, as `examples/archer_demo` does.
 - `World2D.remove_entity` is deferred and only drops the entity from the world's table. Use
   `entity.alive = False` for a full teardown (chunks, components).
 - Spatial audio is stereo panning, not HRTF.

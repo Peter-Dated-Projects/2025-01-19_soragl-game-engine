@@ -100,6 +100,22 @@ constant-power stereo panning relative to the listener. It does not do HRTF, fro
 cues or Doppler. If the machine has no audio device the engine logs a warning and every
 audio call becomes a no-op.
 
+### 2D games
+
+```python
+soragl.init(EngineConfig(render_mode="2d", framebuffer_width=480, framebuffer_height=270))
+
+
+class Play(GameState):
+    def update(self):
+        state.framebuffer_surface.blit(hero_image, (100, 100))   # draw with pygame
+
+
+state.game_state_manager.add_game_state("play", Play("play"))
+state.game_state_manager.set_game_state("play")
+soragl.run()                                          # scaled to the window, pixels kept sharp
+```
+
 ## Layout
 
 ```
