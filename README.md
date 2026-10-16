@@ -64,6 +64,7 @@ working version that circles a sound around you.
 | Textures | `soragl.graphics.texture` | Filter, wrap, anisotropy, mipmaps and flips are part of the cache key. Render targets. |
 | Audio | `soragl.audio` | Buses, voice pool with priorities, music, distance models, stereo panning. |
 | Physics | `soragl.physics` | AABB and Box2D-backed colliders, SAT detection and resolution. |
+| Simulation | `soragl.sim` | Headless: fixed-step clock, seeded noise, grid flow fields, stat modifiers, phase cycles. |
 
 ### Resources and textures
 
@@ -100,6 +101,30 @@ constant-power stereo panning relative to the listener. It does not do HRTF, fro
 cues or Doppler. If the machine has no audio device the engine logs a warning and every
 audio call becomes a no-op.
 
+### Headless simulation
+
+`soragl.sim` imports nothing from the rest of the engine, so game rules built on it run in
+tests and tools without a window.
+
+```python
+import numpy as np
+from soragl.sim import FixedStepClock, Modifiers, PhaseCycle, grid, noise
+
+clock = FixedStepClock(step=0.1, speed=2.0)  # 10 ticks per game second, double speed
+clock.advance(state.delta_time, my_game.step)  # runs my_game.step(0.1) once per tick owed
+
+height = noise.fbm(np.random.default_rng(seed), 128, 128, cell=32)  # same seed, same map
+field = grid.distance_field(walkable, sources=[(64, 64)])  # flow field toward (64, 64)
+x, y = grid.downhill(field, x, y)  # next tile for any walker
+
+mods = Modifiers().apply([("worker.speed", 0.2), ("territory_add", 4)])
+mods.m("worker.speed"), mods.a("territory")  # 1.2, 4
+
+seasons = PhaseCycle([{"food": 1.0}, {"food": 0.2}], length=180.0, blend=0.2)
+seasons.advance(dt)
+seasons.value("food")  # blends into the next phase over its last 20%
+```
+
 ### 2D games
 
 ```python
@@ -133,6 +158,7 @@ src/soragl/
   graphics/    buffers, camera, shaders, textures, sprite sheets
   io/          input, resource manager, model loader
   physics/     entities, interaction field, collision detection and resolution
+  sim/         headless simulation helpers (clock, noise, grid, modifiers, cycles)
   system/      ECS core, world, game state, signals, animation, logging
   data/        shaders bundled with the package
 examples/      archer_demo (full demo), spatial_audio

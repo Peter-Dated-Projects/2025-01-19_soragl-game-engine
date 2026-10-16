@@ -14,8 +14,8 @@ examples/, your game
  game state, signals)   physics/                   (resources, models, input)
 ```
 
-Dependencies point downward. `io/` and `audio/spatial.py` import nothing from the rest of
-the engine, which is why they are unit-tested without a window.
+Dependencies point downward. `io/`, `sim/` and `audio/spatial.py` import nothing from the
+rest of the engine, which is why they are unit-tested without a window.
 
 ## Config and state
 
@@ -76,6 +76,23 @@ Shutdown: game states, shader programs, buffers, VAOs, framebuffers, then `audio
   another component joins the entity, so keep it idempotent), `__on_remove__()` (taken off
   its entity at runtime) and `__on_clean__()` (engine shutdown).
 - Entities die through `entity.alive = False`, which emits a signal that the world handles.
+
+## Simulation
+
+`soragl.sim` is for game rules that must not depend on rendering or frame rate.
+
+- `FixedStepClock.advance(real_dt, step_fn)` turns frame time into whole fixed steps,
+  scaled by `speed` (0 pauses) and capped by `max_steps`, so a stall drops its backlog
+  instead of freezing the game. It keeps a smoothed and a peak step time in milliseconds.
+- `noise.value_noise` / `noise.fbm` are seeded by a `numpy.random.Generator`, so the same
+  seed produces the same world everywhere.
+- `grid.distance_field` is a BFS flow field: build it once per destination and walkers
+  follow `grid.downhill`. `majority_smooth`, `neighbours_any` and `disc` help with
+  procedural tile maps.
+- `Modifiers` sums `(stat, amount)` effects into multipliers (`m`) and flat additions
+  (`a`, stats ending in `_add`), plus unlock flags.
+- `PhaseCycle` runs repeating phases (seasons, day and night) whose numeric properties
+  blend into the next phase near the end of each one.
 
 ## Resources
 
