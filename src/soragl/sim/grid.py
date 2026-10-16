@@ -67,6 +67,7 @@ class IncrementalDistanceField:
                 self._queue.append((x, y))
         self._steps = _STRAIGHT + _DIAGONAL if diagonal else _STRAIGHT
         self.done = not self._queue
+        self.expanded = 0  # tiles processed so far (replaying this many recreates the state)
 
     def advance(self, budget: int = 5000) -> bool:
         if self.done:
@@ -76,6 +77,7 @@ class IncrementalDistanceField:
         steps = self._steps
         while queue and budget > 0:
             budget -= 1
+            self.expanded += 1
             x, y = queue.popleft()
             d = dist[x, y] + 1
             for dx, dy in steps:

@@ -140,6 +140,12 @@ def test_incremental_distance_field_matches_one_shot():
         assert (inc.field[reached] == expected[reached]).all()
     assert steps > 5
     assert np.array_equal(inc.field, expected)
+    # replaying the same number of expansions reproduces a partial state exactly
+    a = grid.IncrementalDistanceField(passable, sources)
+    a.advance(500)
+    b = grid.IncrementalDistanceField(passable, sources)
+    b.advance(a.expanded)
+    assert np.array_equal(a.field, b.field) and list(a._queue) == list(b._queue)
 
 
 def test_incremental_distance_field_without_sources_is_done():
