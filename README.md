@@ -115,6 +115,9 @@ clock.advance(state.delta_time, my_game.step)  # runs my_game.step(0.1) once per
 
 height = noise.fbm(np.random.default_rng(seed), 128, 128, cell=32)  # same seed, same map
 field = grid.distance_field(walkable, sources=[(64, 64)])  # flow field toward (64, 64)
+# big maps: build it a slice per tick instead, so no frame pays for the whole BFS
+builder = grid.IncrementalDistanceField(walkable, sources=[(64, 64)])
+while not builder.advance(budget=3000): ...  # one call per tick; builder.field is partial meanwhile
 x, y = grid.downhill(field, x, y)  # next tile for any walker
 
 mods = Modifiers().apply([("worker.speed", 0.2), ("territory_add", 4)])

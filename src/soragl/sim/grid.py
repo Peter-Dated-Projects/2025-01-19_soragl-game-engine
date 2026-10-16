@@ -42,6 +42,53 @@ def distance_field(
     return dist
 
 
+class IncrementalDistanceField:
+    """`distance_field`, computed a slice at a time so no single frame pays for it.
+
+    Call `advance(budget)` once per tick with how many tiles it may expand; it returns
+    True once the field is complete. Until then `field` holds a partial result (tiles not
+    yet reached are -1), so callers can fall back to straight-line steering meanwhile.
+    The finished field is identical to `distance_field` on the same inputs.
+    """
+
+    def __init__(
+        self,
+        passable: np.ndarray,
+        sources: Iterable[tuple[int, int]],
+        diagonal: bool = True,
+    ):
+        self.passable = passable
+        w, h = passable.shape
+        self.field = np.full((w, h), -1, np.int32)
+        self._queue = deque()
+        for x, y in sources:
+            if 0 <= x < w and 0 <= y < h:
+                self.field[x, y] = 0
+                self._queue.append((x, y))
+        self._steps = _STRAIGHT + _DIAGONAL if diagonal else _STRAIGHT
+        self.done = not self._queue
+
+    def advance(self, budget: int = 5000) -> bool:
+        if self.done:
+            return True
+        dist, passable, queue = self.field, self.passable, self._queue
+        w, h = passable.shape
+        steps = self._steps
+        while queue and budget > 0:
+            budget -= 1
+            x, y = queue.popleft()
+            d = dist[x, y] + 1
+            for dx, dy in steps:
+                nx, ny = x + dx, y + dy
+                if 0 <= nx < w and 0 <= ny < h and dist[nx, ny] < 0 and passable[nx, ny]:
+                    if dx and dy and not (passable[x + dx, y] and passable[x, y + dy]):
+                        continue
+                    dist[nx, ny] = d
+                    queue.append((nx, ny))
+        self.done = not queue
+        return self.done
+
+
 def downhill(field: np.ndarray, x: int, y: int) -> tuple[int, int]:
     """The neighbour of (x, y) with the smallest non-negative field value (or (x, y))."""
     w, h = field.shape

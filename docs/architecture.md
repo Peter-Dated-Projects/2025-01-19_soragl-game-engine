@@ -89,6 +89,8 @@ Shutdown: game states, shader programs, buffers, VAOs, framebuffers, then `audio
 - `grid.distance_field` is a BFS flow field: build it once per destination and walkers
   follow `grid.downhill`. `majority_smooth`, `neighbours_any` and `disc` help with
   procedural tile maps.
+- `grid.IncrementalDistanceField` computes the same field a bounded number of tiles per
+  `advance(budget)` call, for large maps where a full BFS would stall a frame.
 - `Modifiers` sums `(stat, amount)` effects into multipliers (`m`) and flat additions
   (`a`, stats ending in `_add`), plus unlock flags.
 - `PhaseCycle` runs repeating phases (seasons, day and night) whose numeric properties

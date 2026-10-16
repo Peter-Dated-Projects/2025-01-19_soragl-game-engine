@@ -124,3 +124,24 @@ def test_cycle_wraps_and_blends_into_the_next_phase():
     cycle.advance(10.0)
     assert cycle.index == 0 and cycle.cycle == 2
     assert cycle.time_until(1) == pytest.approx(10.0)
+
+
+def test_incremental_distance_field_matches_one_shot():
+    rng = np.random.default_rng(4)
+    passable = rng.random((60, 40)) > 0.2
+    sources = [(30, 20), (5, 5)]
+    expected = grid.distance_field(passable, sources)
+    inc = grid.IncrementalDistanceField(passable, sources)
+    steps = 0
+    while not inc.advance(budget=97):
+        steps += 1
+        # partial fields never claim a tile that the finished one disagrees with
+        reached = inc.field >= 0
+        assert (inc.field[reached] == expected[reached]).all()
+    assert steps > 5
+    assert np.array_equal(inc.field, expected)
+
+
+def test_incremental_distance_field_without_sources_is_done():
+    inc = grid.IncrementalDistanceField(np.ones((4, 4), bool), [])
+    assert inc.done and inc.advance() and (inc.field == -1).all()
