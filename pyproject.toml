@@ -36,6 +36,13 @@ filterwarnings = ["ignore:builtin type .* has no __module__ attribute:Deprecatio
 src = ["src", "tests", "examples"]
 
 [tool.ruff.lint]
-select = ["E", "F", "N", "W"]
+# PLW1514: text files opened without encoding= read as cp1252 on Windows
+select = ["E", "F", "N", "W", "PLW1514"]
+preview = true
+explicit-preview-rules = true
 # line length is the formatter's job
 ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+# init/run/stop are exported lazily through __getattr__ (keeps OpenGL out of import)
+"src/soragl/__init__.py" = ["F822"]

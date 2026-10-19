@@ -57,7 +57,7 @@ class ModelData:
 
 def load_obj(path: Path) -> ModelData:
     path = Path(path)
-    return parse_obj(path.read_text(), base_dir=path.parent)
+    return parse_obj(path.read_text(encoding="utf-8"), base_dir=path.parent)
 
 
 def parse_obj(text: str, base_dir: Path | None = None) -> ModelData:
@@ -171,7 +171,7 @@ def _load_mtl(path: Path) -> dict[str, Material]:
         if name is not None:
             materials[name] = Material(name, color, diffuse_map)
 
-    for raw in path.read_text().splitlines():
+    for raw in path.read_text(encoding="utf-8").splitlines():
         parts = raw.split("#", 1)[0].split()
         if not parts:
             continue

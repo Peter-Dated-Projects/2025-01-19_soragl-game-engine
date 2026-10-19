@@ -37,11 +37,14 @@ def test_negative_indices_count_back_from_the_latest_vertex():
 
 
 def test_usemtl_splits_the_model_into_groups_and_mtl_supplies_the_texture(tmp_path):
-    (tmp_path / "cat.mtl").write_text("newmtl fur\nKd 0.5 0.25 0.1\nmap_Kd fur.png\n")
+    (tmp_path / "cat.mtl").write_text(
+        "newmtl fur\nKd 0.5 0.25 0.1\nmap_Kd fur.png\n", encoding="utf-8"
+    )
     obj = tmp_path / "cat.obj"
     obj.write_text(
         "mtllib cat.mtl\nv 0 0 0\nv 1 0 0\nv 0 1 0\n"
-        "usemtl fur\nf 1 2 3\nusemtl bare\nf 1 2 3\n"
+        "usemtl fur\nf 1 2 3\nusemtl bare\nf 1 2 3\n",
+        encoding="utf-8",
     )
 
     data = model.load_obj(obj)

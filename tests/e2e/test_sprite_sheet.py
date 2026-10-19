@@ -20,7 +20,7 @@ def test_uniform_sheet_is_sliced_and_cached_as_json_next_to_the_image(engine, tm
     sheet = sprite_sheet.SpriteSheet.from_image(image, meta)
 
     assert len(sheet._sprites) == 3
-    saved = json.loads((tmp_path / "idle.json").read_text())
+    saved = json.loads((tmp_path / "idle.json").read_text(encoding="utf-8"))
     assert [s["area"]["x"] for s in saved["sprites"]] == [0, 100, 200]
 
 

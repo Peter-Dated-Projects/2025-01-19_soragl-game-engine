@@ -28,7 +28,7 @@ class Shader:
     # ------------------------------------------------------------------------ #
 
     def get_shader_code(self) -> str:
-        return self._source.read_text()
+        return self._source.read_text(encoding="utf-8")
 
 
 # ======================================================================== #
