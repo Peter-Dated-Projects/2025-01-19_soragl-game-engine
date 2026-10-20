@@ -67,11 +67,24 @@ def init(config: EngineConfig | None = None):
 
     logger.info("Initializing pygame window Context...")
 
-    state.window_surface = pygame.display.set_mode(
-        (state.config.window_width, state.config.window_height),
-        state.config.window_flags,
-        state.config.window_bit_depth,
+    extra = (
+        {"vsync": int(state.config.window_vsync)}
+        if state.config.window_vsync is not None
+        else {}
     )
+    size = (state.config.window_width, state.config.window_height)
+    try:
+        state.window_surface = pygame.display.set_mode(
+            size, state.config.window_flags, state.config.window_bit_depth, **extra
+        )
+    except pygame.error:
+        if not extra:
+            raise
+        # the driver refused the swap interval: open the window without it
+        logger.warning("vsync=%s not available; using the driver default", extra)
+        state.window_surface = pygame.display.set_mode(
+            size, state.config.window_flags, state.config.window_bit_depth
+        )
     state.gl_context = mgl.create_context()
     state.clock = pygame.time.Clock()
     state.framebuffer_surface = pygame.Surface(

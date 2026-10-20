@@ -27,6 +27,8 @@ class EngineConfig:
         pygame.HWSURFACE | pygame.DOUBLEBUF | pygame.RESIZABLE | pygame.OPENGL
     )
     window_icon: str | None = None
+    # None leaves the driver's default swap interval; 1 = vsync on, 0 = off
+    window_vsync: int | None = None
 
     framebuffer_width: int = 1280
     framebuffer_height: int = 720
