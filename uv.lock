@@ -2,8 +2,17 @@ version = 1
 revision = 3
 requires-python = ">=3.11, <3.14"
 resolution-markers = [
-    "python_full_version >= '3.12'",
-    "python_full_version < '3.12'",
+    "python_full_version >= '3.13' and platform_machine == 'arm64' and sys_platform == 'darwin'",
+    "python_full_version >= '3.13' and platform_machine == 'x86_64' and sys_platform == 'darwin'",
+    "python_full_version >= '3.13' and platform_machine == 'AMD64' and sys_platform == 'win32'",
+    "python_full_version == '3.12.*' and platform_machine == 'arm64' and sys_platform == 'darwin'",
+    "python_full_version == '3.12.*' and platform_machine == 'x86_64' and sys_platform == 'darwin'",
+    "python_full_version == '3.12.*' and platform_machine == 'AMD64' and sys_platform == 'win32'",
+    "(python_full_version >= '3.12' and platform_machine != 'arm64' and platform_machine != 'x86_64' and sys_platform == 'darwin') or (python_full_version >= '3.12' and platform_machine != 'AMD64' and sys_platform == 'win32') or (python_full_version >= '3.12' and sys_platform != 'darwin' and sys_platform != 'win32')",
+    "python_full_version < '3.12' and platform_machine == 'arm64' and sys_platform == 'darwin'",
+    "python_full_version < '3.12' and platform_machine == 'x86_64' and sys_platform == 'darwin'",
+    "python_full_version < '3.12' and platform_machine == 'AMD64' and sys_platform == 'win32'",
+    "(python_full_version < '3.12' and platform_machine != 'arm64' and platform_machine != 'x86_64' and sys_platform == 'darwin') or (python_full_version < '3.12' and platform_machine != 'AMD64' and sys_platform == 'win32') or (python_full_version < '3.12' and sys_platform != 'darwin' and sys_platform != 'win32')",
 ]
 
 [[package]]
@@ -109,7 +118,10 @@ name = "numpy"
 version = "2.4.6"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
-    "python_full_version < '3.12'",
+    "python_full_version < '3.12' and platform_machine == 'arm64' and sys_platform == 'darwin'",
+    "python_full_version < '3.12' and platform_machine == 'x86_64' and sys_platform == 'darwin'",
+    "python_full_version < '3.12' and platform_machine == 'AMD64' and sys_platform == 'win32'",
+    "(python_full_version < '3.12' and platform_machine != 'arm64' and platform_machine != 'x86_64' and sys_platform == 'darwin') or (python_full_version < '3.12' and platform_machine != 'AMD64' and sys_platform == 'win32') or (python_full_version < '3.12' and sys_platform != 'darwin' and sys_platform != 'win32')",
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/d0/ad/fed0499ce6a338d2a03ebae59cd15093910c8875328855781952abf6c2fe/numpy-2.4.6.tar.gz", hash = "sha256:f3a3570c4a2a16746ac2c31a7c7c7b0c186b95ce902e33db6f28094ed7387dda", size = 20735807, upload-time = "2026-05-18T23:37:14.07Z" }
 wheels = [
@@ -170,7 +182,13 @@ name = "numpy"
 version = "2.5.4"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
-    "python_full_version >= '3.12'",
+    "python_full_version >= '3.13' and platform_machine == 'arm64' and sys_platform == 'darwin'",
+    "python_full_version >= '3.13' and platform_machine == 'x86_64' and sys_platform == 'darwin'",
+    "python_full_version >= '3.13' and platform_machine == 'AMD64' and sys_platform == 'win32'",
+    "python_full_version == '3.12.*' and platform_machine == 'arm64' and sys_platform == 'darwin'",
+    "python_full_version == '3.12.*' and platform_machine == 'x86_64' and sys_platform == 'darwin'",
+    "python_full_version == '3.12.*' and platform_machine == 'AMD64' and sys_platform == 'win32'",
+    "(python_full_version >= '3.12' and platform_machine != 'arm64' and platform_machine != 'x86_64' and sys_platform == 'darwin') or (python_full_version >= '3.12' and platform_machine != 'AMD64' and sys_platform == 'win32') or (python_full_version >= '3.12' and sys_platform != 'darwin' and sys_platform != 'win32')",
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/95/b0/c7453d0b6e2073c3264468b106ee1563750cecc910965e67357e3698c83e/numpy-2.5.4.tar.gz", hash = "sha256:9a94cf751c9ad8ebaa835bcd3d40dacf8534ad086b88c38029b65123c7999d2a", size = 20866315, upload-time = "2026-10-10T20:05:31.422Z" }
 wheels = [
@@ -214,6 +232,105 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/f9/e2/3e91f31a7d2b083fe6ef3fa267035b518369d9511ffab804f839851d2779/pluggy-1.6.0.tar.gz", hash = "sha256:7dcc130b76258d33b90f61b658791dede3486c3e6bfb003ee5c9bfb396dd22f3", size = 69412, upload-time = "2025-05-15T12:30:07.975Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/54/20/4d324d65cc6d9205fabedc306948156824eb9f0ee1633355a8f7ec5c66bf/pluggy-1.6.0-py3-none-any.whl", hash = "sha256:e920276dd6813095e9377c0bc5566d94c932c33b27a3e3945d8389c374dd4746", size = 20538, upload-time = "2025-05-15T12:30:06.134Z" },
+]
+
+[[package]]
+name = "py-steam-net"
+version = "0.1.0"
+source = { url = "https://github.com/HeatXD/py_steam_net/releases/download/v20250625065149-17457a4/py_steam_net-0.1.0-cp311-cp311-macosx_10_12_x86_64.whl" }
+resolution-markers = [
+    "python_full_version < '3.12' and platform_machine == 'x86_64' and sys_platform == 'darwin'",
+]
+wheels = [
+    { url = "https://github.com/HeatXD/py_steam_net/releases/download/v20250625065149-17457a4/py_steam_net-0.1.0-cp311-cp311-macosx_10_12_x86_64.whl", hash = "sha256:7b1da04c0a31b921b905cf4c1dd4f0825fbdff89d07cd6386f8c3b8c9446414e" },
+]
+
+[[package]]
+name = "py-steam-net"
+version = "0.1.0"
+source = { url = "https://github.com/HeatXD/py_steam_net/releases/download/v20250625065149-17457a4/py_steam_net-0.1.0-cp311-cp311-macosx_11_0_arm64.whl" }
+resolution-markers = [
+    "python_full_version < '3.12' and platform_machine == 'arm64' and sys_platform == 'darwin'",
+]
+wheels = [
+    { url = "https://github.com/HeatXD/py_steam_net/releases/download/v20250625065149-17457a4/py_steam_net-0.1.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:2e3a2e2c139c7da9eb9a111c5b3d728979aa9a8f793c89c029e1c850cd5345a7" },
+]
+
+[[package]]
+name = "py-steam-net"
+version = "0.1.0"
+source = { url = "https://github.com/HeatXD/py_steam_net/releases/download/v20250625065149-17457a4/py_steam_net-0.1.0-cp311-cp311-win_amd64.whl" }
+resolution-markers = [
+    "python_full_version < '3.12' and platform_machine == 'AMD64' and sys_platform == 'win32'",
+]
+wheels = [
+    { url = "https://github.com/HeatXD/py_steam_net/releases/download/v20250625065149-17457a4/py_steam_net-0.1.0-cp311-cp311-win_amd64.whl", hash = "sha256:4d9ca2763eb495cea12f1d957644f19b7c6e1abf56e815b4daa47132f6344dfe" },
+]
+
+[[package]]
+name = "py-steam-net"
+version = "0.1.0"
+source = { url = "https://github.com/HeatXD/py_steam_net/releases/download/v20250625065149-17457a4/py_steam_net-0.1.0-cp312-cp312-macosx_10_12_x86_64.whl" }
+resolution-markers = [
+    "python_full_version == '3.12.*' and platform_machine == 'x86_64' and sys_platform == 'darwin'",
+]
+wheels = [
+    { url = "https://github.com/HeatXD/py_steam_net/releases/download/v20250625065149-17457a4/py_steam_net-0.1.0-cp312-cp312-macosx_10_12_x86_64.whl", hash = "sha256:da29048069e05402734a0fa936f51d43ac60eec58bdf2159fab7a881a0f111ff" },
+]
+
+[[package]]
+name = "py-steam-net"
+version = "0.1.0"
+source = { url = "https://github.com/HeatXD/py_steam_net/releases/download/v20250625065149-17457a4/py_steam_net-0.1.0-cp312-cp312-macosx_11_0_arm64.whl" }
+resolution-markers = [
+    "python_full_version == '3.12.*' and platform_machine == 'arm64' and sys_platform == 'darwin'",
+]
+wheels = [
+    { url = "https://github.com/HeatXD/py_steam_net/releases/download/v20250625065149-17457a4/py_steam_net-0.1.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:bcd4e72c656f3896bc481d5ffac1843b80ea5ca812e75f6c3c7681cbefdb6794" },
+]
+
+[[package]]
+name = "py-steam-net"
+version = "0.1.0"
+source = { url = "https://github.com/HeatXD/py_steam_net/releases/download/v20250625065149-17457a4/py_steam_net-0.1.0-cp312-cp312-win_amd64.whl" }
+resolution-markers = [
+    "python_full_version == '3.12.*' and platform_machine == 'AMD64' and sys_platform == 'win32'",
+]
+wheels = [
+    { url = "https://github.com/HeatXD/py_steam_net/releases/download/v20250625065149-17457a4/py_steam_net-0.1.0-cp312-cp312-win_amd64.whl", hash = "sha256:7dab62a245b44cc85ca5503d94e4416890dbdb0058d584a0d1d0aad3e0b9ae4a" },
+]
+
+[[package]]
+name = "py-steam-net"
+version = "0.1.0"
+source = { url = "https://github.com/HeatXD/py_steam_net/releases/download/v20250625065149-17457a4/py_steam_net-0.1.0-cp313-cp313-macosx_10_12_x86_64.whl" }
+resolution-markers = [
+    "python_full_version >= '3.13' and platform_machine == 'x86_64' and sys_platform == 'darwin'",
+]
+wheels = [
+    { url = "https://github.com/HeatXD/py_steam_net/releases/download/v20250625065149-17457a4/py_steam_net-0.1.0-cp313-cp313-macosx_10_12_x86_64.whl", hash = "sha256:75902cc2973d3b06bb5f3fb3161f448ed3d14a4d7b9ace02abbd136544590c4d" },
+]
+
+[[package]]
+name = "py-steam-net"
+version = "0.1.0"
+source = { url = "https://github.com/HeatXD/py_steam_net/releases/download/v20250625065149-17457a4/py_steam_net-0.1.0-cp313-cp313-macosx_11_0_arm64.whl" }
+resolution-markers = [
+    "python_full_version >= '3.13' and platform_machine == 'arm64' and sys_platform == 'darwin'",
+]
+wheels = [
+    { url = "https://github.com/HeatXD/py_steam_net/releases/download/v20250625065149-17457a4/py_steam_net-0.1.0-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:a4d9b7647614e5ae7b71845ab5c8a6cf8c6fb1fbd26d0c4f7c2c95c08abca9b6" },
+]
+
+[[package]]
+name = "py-steam-net"
+version = "0.1.0"
+source = { url = "https://github.com/HeatXD/py_steam_net/releases/download/v20250625065149-17457a4/py_steam_net-0.1.0-cp313-cp313-win_amd64.whl" }
+resolution-markers = [
+    "python_full_version >= '3.13' and platform_machine == 'AMD64' and sys_platform == 'win32'",
+]
+wheels = [
+    { url = "https://github.com/HeatXD/py_steam_net/releases/download/v20250625065149-17457a4/py_steam_net-0.1.0-cp313-cp313-win_amd64.whl", hash = "sha256:4b2859c248bdcbcd3908287e0c5b53d29e9198ff5e78ac36471b3cf5e20fa6cd" },
 ]
 
 [[package]]
@@ -361,6 +478,19 @@ dependencies = [
     { name = "pyopengl" },
 ]
 
+[package.optional-dependencies]
+steam = [
+    { name = "py-steam-net", version = "0.1.0", source = { url = "https://github.com/HeatXD/py_steam_net/releases/download/v20250625065149-17457a4/py_steam_net-0.1.0-cp311-cp311-macosx_10_12_x86_64.whl" }, marker = "python_full_version < '3.12' and platform_machine == 'x86_64' and sys_platform == 'darwin'" },
+    { name = "py-steam-net", version = "0.1.0", source = { url = "https://github.com/HeatXD/py_steam_net/releases/download/v20250625065149-17457a4/py_steam_net-0.1.0-cp311-cp311-macosx_11_0_arm64.whl" }, marker = "python_full_version < '3.12' and platform_machine == 'arm64' and sys_platform == 'darwin'" },
+    { name = "py-steam-net", version = "0.1.0", source = { url = "https://github.com/HeatXD/py_steam_net/releases/download/v20250625065149-17457a4/py_steam_net-0.1.0-cp311-cp311-win_amd64.whl" }, marker = "python_full_version < '3.12' and platform_machine == 'AMD64' and sys_platform == 'win32'" },
+    { name = "py-steam-net", version = "0.1.0", source = { url = "https://github.com/HeatXD/py_steam_net/releases/download/v20250625065149-17457a4/py_steam_net-0.1.0-cp312-cp312-macosx_10_12_x86_64.whl" }, marker = "python_full_version == '3.12.*' and platform_machine == 'x86_64' and sys_platform == 'darwin'" },
+    { name = "py-steam-net", version = "0.1.0", source = { url = "https://github.com/HeatXD/py_steam_net/releases/download/v20250625065149-17457a4/py_steam_net-0.1.0-cp312-cp312-macosx_11_0_arm64.whl" }, marker = "python_full_version == '3.12.*' and platform_machine == 'arm64' and sys_platform == 'darwin'" },
+    { name = "py-steam-net", version = "0.1.0", source = { url = "https://github.com/HeatXD/py_steam_net/releases/download/v20250625065149-17457a4/py_steam_net-0.1.0-cp312-cp312-win_amd64.whl" }, marker = "python_full_version == '3.12.*' and platform_machine == 'AMD64' and sys_platform == 'win32'" },
+    { name = "py-steam-net", version = "0.1.0", source = { url = "https://github.com/HeatXD/py_steam_net/releases/download/v20250625065149-17457a4/py_steam_net-0.1.0-cp313-cp313-macosx_10_12_x86_64.whl" }, marker = "python_full_version >= '3.13' and platform_machine == 'x86_64' and sys_platform == 'darwin'" },
+    { name = "py-steam-net", version = "0.1.0", source = { url = "https://github.com/HeatXD/py_steam_net/releases/download/v20250625065149-17457a4/py_steam_net-0.1.0-cp313-cp313-macosx_11_0_arm64.whl" }, marker = "python_full_version >= '3.13' and platform_machine == 'arm64' and sys_platform == 'darwin'" },
+    { name = "py-steam-net", version = "0.1.0", source = { url = "https://github.com/HeatXD/py_steam_net/releases/download/v20250625065149-17457a4/py_steam_net-0.1.0-cp313-cp313-win_amd64.whl" }, marker = "python_full_version >= '3.13' and platform_machine == 'AMD64' and sys_platform == 'win32'" },
+]
+
 [package.dev-dependencies]
 dev = [
     { name = "pytest" },
@@ -372,10 +502,20 @@ requires-dist = [
     { name = "box2d", specifier = ">=2.3.10" },
     { name = "moderngl", specifier = ">=5.12" },
     { name = "numpy", specifier = ">=2.0" },
+    { name = "py-steam-net", marker = "python_full_version == '3.11.*' and platform_machine == 'arm64' and sys_platform == 'darwin' and extra == 'steam'", url = "https://github.com/HeatXD/py_steam_net/releases/download/v20250625065149-17457a4/py_steam_net-0.1.0-cp311-cp311-macosx_11_0_arm64.whl" },
+    { name = "py-steam-net", marker = "python_full_version == '3.12.*' and platform_machine == 'arm64' and sys_platform == 'darwin' and extra == 'steam'", url = "https://github.com/HeatXD/py_steam_net/releases/download/v20250625065149-17457a4/py_steam_net-0.1.0-cp312-cp312-macosx_11_0_arm64.whl" },
+    { name = "py-steam-net", marker = "python_full_version == '3.13.*' and platform_machine == 'arm64' and sys_platform == 'darwin' and extra == 'steam'", url = "https://github.com/HeatXD/py_steam_net/releases/download/v20250625065149-17457a4/py_steam_net-0.1.0-cp313-cp313-macosx_11_0_arm64.whl" },
+    { name = "py-steam-net", marker = "python_full_version == '3.11.*' and platform_machine == 'x86_64' and sys_platform == 'darwin' and extra == 'steam'", url = "https://github.com/HeatXD/py_steam_net/releases/download/v20250625065149-17457a4/py_steam_net-0.1.0-cp311-cp311-macosx_10_12_x86_64.whl" },
+    { name = "py-steam-net", marker = "python_full_version == '3.12.*' and platform_machine == 'x86_64' and sys_platform == 'darwin' and extra == 'steam'", url = "https://github.com/HeatXD/py_steam_net/releases/download/v20250625065149-17457a4/py_steam_net-0.1.0-cp312-cp312-macosx_10_12_x86_64.whl" },
+    { name = "py-steam-net", marker = "python_full_version == '3.13.*' and platform_machine == 'x86_64' and sys_platform == 'darwin' and extra == 'steam'", url = "https://github.com/HeatXD/py_steam_net/releases/download/v20250625065149-17457a4/py_steam_net-0.1.0-cp313-cp313-macosx_10_12_x86_64.whl" },
+    { name = "py-steam-net", marker = "python_full_version == '3.11.*' and platform_machine == 'AMD64' and sys_platform == 'win32' and extra == 'steam'", url = "https://github.com/HeatXD/py_steam_net/releases/download/v20250625065149-17457a4/py_steam_net-0.1.0-cp311-cp311-win_amd64.whl" },
+    { name = "py-steam-net", marker = "python_full_version == '3.12.*' and platform_machine == 'AMD64' and sys_platform == 'win32' and extra == 'steam'", url = "https://github.com/HeatXD/py_steam_net/releases/download/v20250625065149-17457a4/py_steam_net-0.1.0-cp312-cp312-win_amd64.whl" },
+    { name = "py-steam-net", marker = "python_full_version == '3.13.*' and platform_machine == 'AMD64' and sys_platform == 'win32' and extra == 'steam'", url = "https://github.com/HeatXD/py_steam_net/releases/download/v20250625065149-17457a4/py_steam_net-0.1.0-cp313-cp313-win_amd64.whl" },
     { name = "pygame-ce", specifier = ">=2.5" },
     { name = "pyglm", specifier = ">=2.8" },
     { name = "pyopengl", specifier = ">=3.1" },
 ]
+provides-extras = ["steam"]
 
 [package.metadata.requires-dev]
 dev = [
