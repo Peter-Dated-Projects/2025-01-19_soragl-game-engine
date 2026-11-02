@@ -75,6 +75,7 @@ class ECSHandler:
         )
         # remove from entity as well
         component._entity.remove_component(component, _reload=False)
+        component.__on_remove__()
 
         # remove component from the cache
         del self._components[component.__class__][component._uuid]
@@ -112,6 +113,9 @@ class Component:
 
     def __on_clean__(self):
         pass
+
+    def __on_remove__(self):
+        """Called when the component is taken off its entity at runtime."""
 
     # -------------------------------------------------------------------- #
     # logic

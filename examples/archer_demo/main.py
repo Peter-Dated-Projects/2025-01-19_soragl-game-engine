@@ -21,7 +21,6 @@ from soragl.system import log
 from soragl.graphics import buffer
 from soragl.graphics import shader
 from soragl.graphics import camera
-from soragl.graphics import texture
 from soragl.graphics import sprite_sheet
 from soragl.graphics import constants as gfx_consts
 
@@ -404,16 +403,16 @@ rman = render_entity.add_component(
     )
 )
 
-rman().set_texture(0, texture.Texture(raw_image=state.framebuffer_surface))
+rman().set_texture(0, state.texture_manager.from_surface(state.framebuffer_surface))
 
 # Create persistent texture for framebuffer updates (prevents memory leak)
 # This texture is reused every frame instead of creating new textures
-framebuffer_texture_slot0 = texture.Texture.create_non_file_texture(
-    width=state.config.framebuffer_width,
-    height=state.config.framebuffer_height,
-    channels=4,
-    color_buffer=True,
+framebuffer_texture_slot0 = state.texture_manager.create_color_target(
+    state.config.framebuffer_width, state.config.framebuffer_height
 )
+
+snowman_texture = state.texture_manager.load("assets/snowman.jpg")
+cult_texture = state.texture_manager.load("assets/cult.jpg")
 
 m_model_rman = glm.mat4()
 
@@ -432,7 +431,7 @@ def sub_task1():
     # Update texture data instead of creating new texture (prevents memory leak)
     framebuffer_texture_slot0.update_from_surface(state.framebuffer_surface)
     rman().set_texture(0, framebuffer_texture_slot0)
-    rman().set_texture(1, texture.Texture.get_texture("assets/snowman.jpg"))
+    rman().set_texture(1, snowman_texture)
 
 
 render_entity.add_component(c_task.TaskComponent("sub_task", sub_task1), priority=1)
@@ -482,7 +481,7 @@ def sub_task2():
     result = glm.scale(result, glm.vec3(0.1))
 
     rman2().write_uniform("m_model", result)
-    rman2().set_texture(1, texture.Texture.get_texture("assets/cult.jpg"))
+    rman2().set_texture(1, cult_texture)
 
 
 render_entity2.add_component(c_task.TaskComponent("sub_task", sub_task2), priority=1)
@@ -539,15 +538,12 @@ rman3 = render_entity3.add_component(
     )
 )
 
-rman3().set_texture(0, texture.Texture(raw_image=state.framebuffer_surface))
+rman3().set_texture(0, state.texture_manager.from_surface(state.framebuffer_surface))
 
 # Create persistent texture for framebuffer updates (prevents memory leak)
 # This texture is reused every frame instead of creating new textures
-framebuffer_texture_slot0_copy = texture.Texture.create_non_file_texture(
-    width=state.config.framebuffer_width,
-    height=state.config.framebuffer_height,
-    channels=4,
-    color_buffer=True,
+framebuffer_texture_slot0_copy = state.texture_manager.create_color_target(
+    state.config.framebuffer_width, state.config.framebuffer_height
 )
 
 m_model_rman3 = glm.mat4()
@@ -579,12 +575,10 @@ render_entity3.add_component(c_task.TaskComponent("sub_task", sub_task3))
 #     vertex_shader=shader.Shader.builtin("model_vertex"),
 #     fragment_shader=shader.Shader.builtin("model_fragment"),
 # )
-# c_name, c_material = pywavefront.Wavefront(
-#     "assets/models/cat/20430_Cat_v1_NEW.obj", parse=True
-# ).materials.popitem()
-# c_vdata = buffer.GLBufferObject(np.array(c_material.vertices, dtype="float32"))
-# c_tex = texture.Texture.get_texture(
-#     "assets/models/cat/20430_cat_diff_v1.jpg", yflip=True
+# c_model = state.resource_manager.load("assets/models/cat/20430_Cat_v1_NEW.obj")
+# c_vdata = buffer.GLBufferObject(c_model.vertices)  # vertex format: model.VERTEX_FORMAT
+# c_tex = state.texture_manager.load(
+#     "assets/models/cat/20430_cat_diff_v1.jpg", TextureSettings(flip_y=True)
 # )
 
 # cat_entity = state.world.add_entity(entity.Entity(name="cat model"))

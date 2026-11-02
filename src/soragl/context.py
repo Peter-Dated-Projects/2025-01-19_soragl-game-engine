@@ -13,6 +13,8 @@ from soragl.graphics import buffer
 from soragl.graphics import shader
 from soragl.graphics import texture
 
+from soragl.audio import engine as audio_engine
+
 from soragl.physics import entity
 
 from soragl.io import resource_manager
@@ -85,6 +87,16 @@ def init(config: EngineConfig | None = None):
     state.input_handler = input_handler.InputHandler()
     state.signal_handler = signal.SignalHandler()
     state.resource_manager = resource_manager.ResourceManager()
+    state.texture_manager = texture.TextureManager(
+        state.gl_context, state.resource_manager
+    )
+    state.audio = audio_engine.AudioEngine(
+        resources=state.resource_manager,
+        voices=state.config.audio_voices,
+        frequency=state.config.audio_frequency,
+        buffer=state.config.audio_buffer,
+        enabled=state.config.audio_enabled,
+    )
 
     state.game_state_manager = game_state.GameStateManager()
     # update ecs handler
@@ -128,7 +140,7 @@ def init(config: EngineConfig | None = None):
             )
         ],
         depth_attachment=buffer.FramebufferObject.create_depth_attachment(
-            state.config.framebuffer_width, state.config.framebuffer_height, is_tex=True
+            state.config.framebuffer_width, state.config.framebuffer_height
         ),
     )
 
@@ -219,6 +231,8 @@ def run():
             state.game_state_manager.update()
             state.signal_handler.handle()
 
+        state.audio.update()
+
         # update window
         pygame.display.flip()
         state.clock.tick(state.config.window_fps)
@@ -231,7 +245,9 @@ def run():
     # clear up all game states
     state.game_state_manager.__on_clean__()
     # clean up textures + shaders + buffers + vaos + framebuffers
-    texture.Texture.__on_clean__()
+    state.audio.shutdown()
+    state.texture_manager.shutdown()
+    state.resource_manager.clear()
     shader.ShaderProgram.__on_clean__()
     buffer.GLBufferObject.__on_clean__()
     buffer.VAOObject.__on_clean__()
