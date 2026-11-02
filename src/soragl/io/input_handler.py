@@ -108,7 +108,7 @@ class InputHandler:
             if key < len(cls._prev_keyboard_inputs)
             else False
         )
-        return current and not previous
+        return not current and previous
 
     # ------------------------------------------------------------------------ #
     # Mouse (backward compatible + enhanced)
@@ -154,7 +154,7 @@ class InputHandler:
     def get_mouse_delta(cls) -> Tuple[int, int]:
         """Get the mouse movement delta from last frame (dx, dy)."""
         dx = cls._mouse_position[0] - cls._prev_mouse_position[0]
-        dy = cls._prev_mouse_position[1] - cls._mouse_position[1]
+        dy = cls._mouse_position[1] - cls._prev_mouse_position[1]
         return (dx, dy)
 
     @classmethod
