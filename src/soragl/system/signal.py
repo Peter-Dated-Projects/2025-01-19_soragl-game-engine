@@ -41,7 +41,7 @@ class SignalHandler:
     # getters
 
     def get_signal_queue(self):
-        return self._signal_queue
+        return self._signal_packet_queue
 
     def get_signals(self):
         return self._signals
@@ -100,9 +100,14 @@ class SignalReceiver:
 
     def emit_signal(self, *args):
         # check if args are valid
-        for i in range(len(self._handler._args_template)):
-            if type(args[i]) is not self._handler._args_template[i]:
-                raise Exception("Invalid argument type")
+        template = self._handler._args_template
+        if len(args) < len(template) or not all(
+            isinstance(arg, expected) for arg, expected in zip(args, template)
+        ):
+            raise TypeError(
+                f"Invalid argument type for signal {self._handler._signal_name!r}: "
+                f"expected {template}, got {args}"
+            )
         self._function(*args)
 
 

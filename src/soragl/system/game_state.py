@@ -12,8 +12,15 @@ logger = logging.getLogger(__name__)
 
 
 class GameState:
+    """A screen of the game (title, overworld, ...) with its own world and ECS.
+
+    Subclasses override `update()` to run their own logic and drawing, and
+    `on_enter()` / `on_exit()` to react to becoming or leaving the current state.
+    """
+
     def __init__(self, name: str):
         self._name = name
+        self._initialized = False
 
         self._world = world.World2D(name)
         self._ecs = ecs.ECSHandler()
@@ -25,6 +32,7 @@ class GameState:
     def __post_init__(self):
         self._world.__post_init__()
         self._ecs.__post_init__()
+        self._initialized = True
 
     def __on_clean__(self):
         self._world.__on_clean__()
@@ -33,6 +41,19 @@ class GameState:
     # ------------------------------------------------------------------------ #
     # logic
     # ------------------------------------------------------------------------ #
+
+    def update(self):
+        self._world.update()
+
+    def on_enter(self):
+        pass
+
+    def on_exit(self):
+        pass
+
+    @property
+    def name(self) -> str:
+        return self._name
 
     def get_world(self):
         return self._world
@@ -69,7 +90,7 @@ class GameStateManager:
 
     def update(self):
         if self._current_state is not None:
-            self._current_state.get_world().update()
+            self._current_state.update()
         else:
             logger.warning("No current state")
 
@@ -81,10 +102,17 @@ class GameStateManager:
         return self._states.get(name)
 
     def set_game_state(self, name: str):
-        self._current_state = self._states.get(name)
+        """Make `name` current. The state's `__post_init__` runs the first time only."""
+        if name not in self._states:
+            raise KeyError(f"No game state named {name!r}")
+        if self._current_state is not None:
+            self._current_state.on_exit()
+        self._current_state = self._states[name]
         state.ecs_handler = self._current_state.get_ecs()
         state.world = self._current_state.get_world()
-        self._current_state.__post_init__()
+        if not self._current_state._initialized:
+            self._current_state.__post_init__()
+        self._current_state.on_enter()
 
     def add_game_state(self, name: str, game_state: GameState):
         self._states[name] = game_state
@@ -103,15 +131,15 @@ class GameStateManager:
         return self._current_state.get_world()
 
     def push_state(self, name: str):
+        """Make `name` current, remembering the current state for `pop_state()`."""
         self._state_stack.append(self._current_state)
         self.set_game_state(name)
 
     def pop_state(self):
-        self.set_game_state(self._state_stack.pop())
-        # update current state
-        self._current_state = (
-            self._state_stack[-1] if len(self._state_stack) > 0 else None
-        )
+        """Return to the state that was current before the last `push_state()`."""
+        if not self._state_stack:
+            raise IndexError("pop_state() called with no pushed state")
+        self.set_game_state(self._state_stack.pop()._name)
 
     def clear_state_stack(self):
         self._state_stack.clear()

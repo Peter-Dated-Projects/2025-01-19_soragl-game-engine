@@ -33,6 +33,9 @@ gl_framebuffer_rendering_manifold = None
 window_surface = None
 framebuffer_surface = None
 clock = None
+presenter = None
+# the pygame events of the current frame
+events = []
 
 # engine objects
 ecs_handler = None
@@ -50,7 +53,7 @@ def reset():
     global config, running, delta_time, start_time, end_time, run_time
     global gl_context, gl_framebuffer, gl_framebuffer_vao, gl_framebuffer_vbo
     global gl_framebuffer_shader, gl_framebuffer_rendering_manifold
-    global window_surface, framebuffer_surface, clock
+    global window_surface, framebuffer_surface, clock, presenter, events
     global ecs_handler, input_handler, signal_handler, resource_manager
     global texture_manager, audio
     global game_state_manager, world
@@ -60,7 +63,8 @@ def reset():
     delta_time = start_time = end_time = run_time = 0
     gl_context = gl_framebuffer = gl_framebuffer_vao = gl_framebuffer_vbo = None
     gl_framebuffer_shader = gl_framebuffer_rendering_manifold = None
-    window_surface = framebuffer_surface = clock = None
+    window_surface = framebuffer_surface = clock = presenter = None
+    events = []
     ecs_handler = input_handler = signal_handler = resource_manager = None
     texture_manager = audio = None
     game_state_manager = world = None

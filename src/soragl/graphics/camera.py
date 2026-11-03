@@ -59,6 +59,7 @@ class Camera3D(BaseCamera):
         forward: glm.vec3 = glm.vec3(0, 0, 1),
         up: glm.vec3 = glm.vec3(0, 1, 0),
         orthogonal: bool = False,
+        ortho_height: float | None = None,
         width: int | None = None,
         height: int | None = None,
         orientation_lock: bool = False,
@@ -69,6 +70,8 @@ class Camera3D(BaseCamera):
         forward: which direction the camera is looking
         up: what the camera considers 'vertical'
         position: where the camera is located
+        ortho_height: world units visible vertically in orthographic mode; the
+            width follows the aspect ratio. None keeps 1 world unit = 1 pixel.
         """
         super().__init__(render_distance)
 
@@ -80,6 +83,7 @@ class Camera3D(BaseCamera):
         self._forward = forward
         self._up = up  # We'll keep a true up vector, not derived from rotation.
         self._orthogonal = orthogonal
+        self._ortho_height = ortho_height
         self._width = width if width is not None else state.config.window_width
         self._height = height if height is not None else state.config.window_height
 
@@ -150,11 +154,17 @@ class Camera3D(BaseCamera):
         """
         if self._orthogonal:
             # Orthographic
+            if self._ortho_height is None:
+                half_h = self._height / 2.0
+                half_w = self._width / 2.0
+            else:
+                half_h = self._ortho_height / 2.0
+                half_w = half_h * self._width / float(self._height)
             self._projection = glm.ortho(
-                -self._width / 2.0,
-                self._width / 2.0,
-                -self._height / 2.0,
-                self._height / 2.0,
+                -half_w,
+                half_w,
+                -half_h,
+                half_h,
                 self._near,
                 self._far,
             )
@@ -262,6 +272,15 @@ class Camera3D(BaseCamera):
     @orthogonal.setter
     def orthogonal(self, value: bool):
         self._orthogonal = value
+        self._recalculate_projection()
+
+    @property
+    def ortho_height(self):
+        return self._ortho_height
+
+    @ortho_height.setter
+    def ortho_height(self, value: float | None):
+        self._ortho_height = value
         self._recalculate_projection()
 
     @property
