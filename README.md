@@ -128,6 +128,49 @@ seasons.advance(dt)
 seasons.value("food")  # blends into the next phase over its last 20%
 ```
 
+### Multiplayer
+
+`soragl.net` puts a game online in one of two ways, chosen by the player:
+
+* `via="p2p"`: a player's machine hosts; everyone else connects to its IP and port
+  (LAN, or the internet with that UDP port forwarded on the host's router).
+* `via="steam"`: Steam carries the traffic. The host makes a Steam lobby, others join it
+  by lobby id, and Steam relays everything, so nobody forwards ports. This needs
+  `uv sync --extra steam` (the [py_steam_net](https://github.com/HeatXD/py_steam_net)
+  wheels), Valve's `libsteam_api` from the Steamworks SDK put in place once with
+  `python -m soragl.net.steam install <path>`, and Steam running and signed in. App id
+  480 (Valve's Spacewar test app) works until the game has its own.
+
+And one of two sync models:
+
+* `model="lockstep"`: only inputs travel and every machine runs the same deterministic
+  simulation (RTS, many units). Checksums catch a drifting peer and resync it from a
+  snapshot; late joiners get a snapshot too.
+* `model="authority"`: the host simulates; clients send inputs and show the host's
+  snapshots, interpolated (physics and action games: nothing needs to be deterministic).
+
+The game supplies four methods, all bytes in and out (the engine never unpickles network
+data):
+
+```python
+class MyGame:
+    def net_input(self) -> bytes: ...                   # the local player's input
+    def net_step(self, dt, inputs: dict[int, bytes]): ...  # one tick, every player's input
+    def net_snapshot(self) -> bytes: ...                # the whole state
+    def net_restore(self, data: bytes): ...             # become that state
+    # optional: net_checksum() -> int, net_interpolate(older, newer, t)
+
+session = soragl.net.host(game, via="p2p", model="lockstep", game_id="my-game", version="1.0")
+session = soragl.net.join(game, via="p2p", address="192.168.1.20:7777", model="lockstep",
+                          game_id="my-game", version="1.0")
+for event in session.update(state.delta_time): ...  # join, leave, joined, rejected, closed, desync
+```
+
+The handshake refuses a client with a different game, version or sync settings, with the
+reason. A dedicated server is a host whose own input is empty, run without a window by
+`soragl.net.run_headless(session)`. `examples/net_demo` is a playable example of all of
+it.
+
 ### 2D games
 
 ```python
@@ -161,10 +204,11 @@ src/soragl/
   graphics/    buffers, camera, shaders, textures, sprite sheets
   io/          input, resource manager, model loader
   physics/     entities, interaction field, collision detection and resolution
+  net/         multiplayer: UDP and Steam transports, sessions, lockstep and authority
   sim/         headless simulation helpers (clock, noise, grid, modifiers, cycles)
   system/      ECS core, world, game state, signals, animation, logging
   data/        shaders bundled with the package
-examples/      archer_demo (full demo), spatial_audio
+examples/      archer_demo (full demo), spatial_audio, net_demo
 tests/         unit/ (pure logic) and e2e/ (real pygame, mixer and OpenGL objects)
 docs/          architecture.md
 ```
