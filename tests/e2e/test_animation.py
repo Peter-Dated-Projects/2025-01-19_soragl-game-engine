@@ -42,7 +42,8 @@ def test_animation_json_loads_frames_from_a_spritesheet(engine, tmp_path):
                     {"area": {"x": 100, "y": 0, "w": 100, "h": 100}, "extra": {}},
                 ],
             }
-        )
+        ),
+        encoding="utf-8",
     )
     animation_json = tmp_path / "walk_animation.json"
     animation_json.write_text(
@@ -58,7 +59,8 @@ def test_animation_json_loads_frames_from_a_spritesheet(engine, tmp_path):
                     }
                 ],
             }
-        )
+        ),
+        encoding="utf-8",
     )
 
     loaded = animation.Animation.from_json(str(animation_json))

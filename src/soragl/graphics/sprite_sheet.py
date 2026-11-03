@@ -59,7 +59,7 @@ class SpriteSheet:
             return cls.SPRITESHEET_CACHE[json_path]
 
         # open json file and retrieve meta data + sprite loading data
-        with open(json_path, "r") as f:
+        with open(json_path, "r", encoding="utf-8") as f:
             data = json.load(f)
 
         # create spritesheet
@@ -165,7 +165,9 @@ class SpriteSheet:
             ],
         }
 
-        with open(os.path.splitext(self._meta["source"])[0] + ".json", "w") as f:
+        with open(
+            os.path.splitext(self._meta["source"])[0] + ".json", "w", encoding="utf-8"
+        ) as f:
             json.dump(json_data, f)
 
         # end
@@ -210,7 +212,11 @@ class SpriteSheet:
                 ],
             }
 
-            with open(os.path.splitext(self._meta["source"])[0] + ".json", "w") as f:
+            with open(
+                os.path.splitext(self._meta["source"])[0] + ".json",
+                "w",
+                encoding="utf-8",
+            ) as f:
                 json.dump(json_data, f)
 
         # end

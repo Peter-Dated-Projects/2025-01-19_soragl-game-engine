@@ -50,7 +50,7 @@ class Animation:
             return cls.ANIMATION_CACHE[json_path]
 
         # load json file
-        with open(json_path, "r") as f:
+        with open(json_path, "r", encoding="utf-8") as f:
             data = json.load(f)
 
         meta = data["meta"]

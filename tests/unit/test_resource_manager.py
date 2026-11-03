@@ -46,15 +46,15 @@ def test_missing_file_raises_file_not_found(manager, tmp_path):
 
 def test_unsupported_extension_raises_value_error(manager, tmp_path):
     odd = tmp_path / "notes.xyz"
-    odd.write_text("hi")
+    odd.write_text("hi", encoding="utf-8")
 
     with pytest.raises(ValueError, match="Unsupported resource type"):
         manager.load(str(odd))
 
 
 def test_files_load_as_text_json_and_bytes(manager, tmp_path):
-    (tmp_path / "level.json").write_text(json.dumps({"name": "cave"}))
-    (tmp_path / "frag.glsl").write_text("void main() {}")
+    (tmp_path / "level.json").write_text(json.dumps({"name": "cave"}), encoding="utf-8")
+    (tmp_path / "frag.glsl").write_text("void main() {}", encoding="utf-8")
     (tmp_path / "save.dat").write_bytes(b"\x00\x01")
 
     assert manager.load(tmp_path / "level.json") == {"name": "cave"}
@@ -63,7 +63,9 @@ def test_files_load_as_text_json_and_bytes(manager, tmp_path):
 
 
 def test_models_load_as_vertex_data(manager, tmp_path):
-    (tmp_path / "tri.obj").write_text("v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3\n")
+    (tmp_path / "tri.obj").write_text(
+        "v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3\n", encoding="utf-8"
+    )
 
     assert manager.load(tmp_path / "tri.obj").vertex_count == 3
 
@@ -114,12 +116,12 @@ def test_scope_drops_what_it_loaded_but_keeps_what_others_hold(manager, tmp_path
 
 def test_custom_kinds_load_options_and_unload_when_collected(manager, tmp_path):
     freed = []
-    (tmp_path / "pal.pal").write_text("ff0000")
+    (tmp_path / "pal.pal").write_text("ff0000", encoding="utf-8")
     manager.register_kind(
         ResourceKind(
             "palette",
             (".pal",),
-            lambda path, shade=1: (path.read_text(), shade),
+            lambda path, shade=1: (path.read_text(encoding="utf-8"), shade),
             unload=freed.append,
         )
     )
@@ -135,7 +137,7 @@ def test_custom_kinds_load_options_and_unload_when_collected(manager, tmp_path):
 
 def test_stats_report_bytes_per_kind(manager, tmp_path):
     manager.load(_write_png(tmp_path / "a.png", (10, 10)))
-    (tmp_path / "t.txt").write_text("hello")
+    (tmp_path / "t.txt").write_text("hello", encoding="utf-8")
     manager.load(tmp_path / "t.txt")
 
     stats = manager.stats()
@@ -156,7 +158,7 @@ def test_clear_unloads_everything_even_when_still_referenced(manager, tmp_path):
 
 def test_clear_copes_with_resources_that_release_their_dependencies(manager, tmp_path):
     image = _write_png(tmp_path / "a.png")
-    (tmp_path / "a.derived").write_text("x")
+    (tmp_path / "a.derived").write_text("x", encoding="utf-8")
 
     def load_derived(path):
         manager.load(image)  # depends on the image staying loaded
