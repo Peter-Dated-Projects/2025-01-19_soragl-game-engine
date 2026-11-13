@@ -92,33 +92,35 @@ class Renderer:
         centered = np.array([-0.5, -0.5, 0.5, -0.5, 0.5, 0.5, -0.5, 0.5], "f4")
         self._corners = ctx.buffer(centered)
         self._instances = ctx.buffer(reserve=8 * 4 * 256, dynamic=True)
+        self._indices = ctx.buffer(np.array([0, 1, 2, 0, 2, 3], "i4"))
+        self._screen_quad = ctx.buffer(np.array([-1, -1, 1, -1, -1, 1, 1, 1], "f4"))
         self._particle_vao = ctx.vertex_array(
             self._particle_prog,
             [
                 (self._corners, "2f", "in_corner"),
                 (self._instances, "3f 1f 4f/i", "in_center", "in_size", "in_color"),
             ],
-            index_buffer=ctx.buffer(np.array([0, 1, 2, 0, 2, 3], "i4")),
+            index_buffer=self._indices,
         )
         self._blit_vao = ctx.vertex_array(
             self._blit_prog,
-            [
-                (
-                    ctx.buffer(np.array([-1, -1, 1, -1, -1, 1, 1, 1], "f4")),
-                    "2f",
-                    "in_position",
-                )
-            ],
+            [(self._screen_quad, "2f", "in_position")],
         )
 
         self._scene_color = ctx.texture(self.render_size, 4)
         self._scene_color.filter = (mgl.NEAREST, mgl.NEAREST)
-        self._scene_fbo = ctx.framebuffer(
-            [self._scene_color], ctx.depth_renderbuffer(self.render_size)
-        )
-        self._output_fbo = ctx.framebuffer([ctx.renderbuffer(output_size, 4)])
+        self._scene_depth = ctx.depth_renderbuffer(self.render_size)
+        self._scene_fbo = ctx.framebuffer([self._scene_color], self._scene_depth)
+        # released in this order by release(): users before what they use
+        self._owned = [
+            self._scene_fbo, self._scene_depth, self._scene_color,
+            self._sprite_vao, self._shadow_sprite_vao, self._particle_vao, self._blit_vao,
+            self._quad, self._corners, self._instances, self._indices, self._screen_quad,
+            self._mesh_prog, self._sprite_prog, self._shadow_prog, self._particle_prog,
+            self._blit_prog, self._white,
+        ]  # fmt: skip
         self._shadow_size = 0
-        self._mesh_vaos: dict[tuple, mgl.VertexArray] = {}
+        self._mesh_vaos: dict[tuple, tuple[mgl.VertexArray, mgl.Buffer]] = {}
 
     # ------------------------------------------------------------------------ #
     # public
@@ -127,8 +129,8 @@ class Renderer:
     def render(
         self, scene: Scene, camera: Camera3D, target: mgl.Framebuffer | None = None
     ):
-        """Draw one frame into `target` (default: the renderer's own output buffer,
-        which `read_pixels` reads). Pass `ctx.screen` to show it in the game window."""
+        """Draw one frame. `read_pixels` reads it afterwards; pass a `target`
+        framebuffer (e.g. `ctx.screen` in a game window) to also show it upscaled."""
         light_matrix = self._shadow_pass(scene, camera)
 
         self._scene_fbo.use()
@@ -175,25 +177,39 @@ class Renderer:
             self._sprite_vao.render()
 
         self._draw_particles(scene, camera)
-        self._present(target or self._output_fbo)
+        if target is not None:
+            self._present(target)
         self.ctx.enable_only(mgl.DEPTH_TEST)  # what the engine's 3D loop expects
 
-    def read_pixels(self) -> np.ndarray:
-        """The last frame rendered to the default target, (height, width, 3) uint8,
-        top row first."""
-        w, h = self.output_size
-        data = np.frombuffer(self._output_fbo.read(components=3), np.uint8)
-        return np.flipud(data.reshape(h, w, 3))
+    def read_pixels(self, native: bool = False) -> np.ndarray:
+        """The last rendered frame, (height, width, 3) uint8, top row first.
+
+        Valid whatever `target` was. `native=True` returns it at `render_size` (one
+        pixel per art pixel), which is `pixel_scale`² less data to read back; give
+        `FrameRecorder` `upscale=pixel_scale` to get the same output-size video.
+        """
+        w, h = self.render_size
+        data = np.frombuffer(self._scene_fbo.read(components=3), np.uint8)
+        frame = np.flipud(data.reshape(h, w, 3))
+        if native or self.pixel_scale == 1:
+            return frame
+        # the present shader's sharp filter equals nearest at integer scales
+        s = self.pixel_scale
+        return frame.repeat(s, axis=0).repeat(s, axis=1)
 
     def release(self) -> None:
-        for vao in self._mesh_vaos.values():
+        """Free every GL object the renderer made. Textures passed in stay the caller's."""
+        for vao, buffer in self._mesh_vaos.values():
             vao.release()
+            buffer.release()
         self._mesh_vaos.clear()
-        for obj in (self._scene_fbo, self._output_fbo, self._scene_color, self._white):
+        for obj in self._owned:
             obj.release()
+        self._owned.clear()
         if self._shadow_size:
             self._shadow_fbo.release()
             self._shadow_tex.release()
+            self._shadow_size = 0
 
     # ------------------------------------------------------------------------ #
     # passes
@@ -305,16 +321,21 @@ class Renderer:
     # ------------------------------------------------------------------------ #
 
     def _vao(self, program: mgl.Program, mesh) -> mgl.VertexArray:
+        # shortcut: keyed on identity and uploaded once; meshes are treated as immutable,
+        # and a long-lived renderer with churning meshes should add eviction
         key = (id(program), id(mesh))
-        vao = self._mesh_vaos.get(key)
-        if vao is None:
+        cached = self._mesh_vaos.get(key)
+        if cached is None:
             buffer = self.ctx.buffer(mesh.vertices.tobytes())
             if program is self._shadow_prog:
                 layout = (buffer, "3f 20x", "in_position")
             else:
                 layout = (buffer, "3f 2f 3f", "in_position", "in_uv", "in_normal")
-            vao = self._mesh_vaos[key] = self.ctx.vertex_array(program, [layout])
-        return vao
+            cached = self._mesh_vaos[key] = (
+                self.ctx.vertex_array(program, [layout]),
+                buffer,
+            )
+        return cached[0]
 
     @staticmethod
     def _sprite_axes(sprite: Sprite3D, facing: glm.vec3) -> tuple[glm.vec3, glm.vec3]:

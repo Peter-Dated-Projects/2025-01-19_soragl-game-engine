@@ -303,12 +303,14 @@ def main():
 
     dt = 1 / args.fps
     frames = round(args.seconds * args.fps)
-    with FrameRecorder(args.output, (width, height), args.fps) as recorder:
+    with FrameRecorder(
+        args.output, renderer.render_size, args.fps, upscale=args.pixel_scale
+    ) as recorder:
         for i in range(frames):
             t = i * dt
             shot.apply(camera, t)
             renderer.render(frame_scene(base, world, t, dt), camera)
-            recorder.write(renderer.read_pixels())
+            recorder.write(renderer.read_pixels(native=True))
     print(f"wrote {frames} frames ({width}x{height} @ {args.fps} fps) to {args.output}")
 
 

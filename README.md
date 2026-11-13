@@ -194,11 +194,12 @@ scene = Scene(
     meshes=[MeshInstance(Mesh.plane(40, 40)), MeshInstance(Mesh.box((4, 3, 4)))],
     sprites=[Sprite3D(hero_texture, (3, 0, 3), size=(1, 1.5))],
 )
-with FrameRecorder("clip.mp4", (1440, 2560), fps=30) as recorder:
+# read frames at 360x640 and let ffmpeg upscale: same video, 16x less readback
+with FrameRecorder("clip.mp4", renderer.render_size, fps=30, upscale=4) as recorder:
     for i in range(150):
         shot.apply(camera, i / 30)
-        renderer.render(scene, camera)  # renderer.render(scene, camera, ctx.screen) in a window
-        recorder.write(renderer.read_pixels())
+        renderer.render(scene, camera)  # add target=ctx.screen to also show it in a window
+        recorder.write(renderer.read_pixels(native=True))
 ```
 
 Passes: directional shadow map, toon-lit meshes, alpha-cut sprites (they cast
