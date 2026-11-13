@@ -65,6 +65,7 @@ working version that circles a sound around you.
 | Audio | `soragl.audio` | Buses, voice pool with priorities, music, distance models, stereo panning. |
 | Physics | `soragl.physics` | AABB and Box2D-backed colliders, SAT detection and resolution. |
 | Simulation | `soragl.sim` | Headless: fixed-step clock, seeded noise, grid flow fields, stat modifiers, phase cycles. |
+| 2.5D rendering | `soragl.graphics.renderer3d`, `scene3d`, `shot`, `recorder` | Lit toon meshes, flat sprites in 3D, shadows, particles, camera shots, headless video export. |
 
 ### Resources and textures
 
@@ -171,6 +172,40 @@ reason. A dedicated server is a host whose own input is empty, run without a win
 `soragl.net.run_headless(session)`. `examples/net_demo` is a playable example of all of
 it.
 
+### 2.5D scenes and recorded clips
+
+Flat pixel-art sprites standing in a lit 3D world (Paper Mario style), rendered
+headless at a fixed frame rate and written to video. A `Scene` is plain data, so a
+simulation can build one per frame from its own state.
+
+```python
+import moderngl
+from soragl.graphics.camera import Camera3D
+from soragl.graphics.recorder import FrameRecorder
+from soragl.graphics.renderer3d import Renderer
+from soragl.graphics.scene3d import Material, Mesh, MeshInstance, Scene, Sprite3D
+from soragl.graphics.shot import Key, Shot
+
+ctx = moderngl.create_standalone_context(require=330)  # or state.gl_context
+renderer = Renderer(ctx, (1440, 2560), pixel_scale=4)  # draws at 360x640, scales up sharp
+camera = Camera3D(0, orthogonal=True, width=1440, height=2560)
+shot = Shot([Key(0, (0, 1, 0), height=12), Key(5, (4, 1, 0), height=8)])
+scene = Scene(
+    meshes=[MeshInstance(Mesh.plane(40, 40)), MeshInstance(Mesh.box((4, 3, 4)))],
+    sprites=[Sprite3D(hero_texture, (3, 0, 3), size=(1, 1.5))],
+)
+with FrameRecorder("clip.mp4", (1440, 2560), fps=30) as recorder:
+    for i in range(150):
+        shot.apply(camera, i / 30)
+        renderer.render(scene, camera)  # renderer.render(scene, camera, ctx.screen) in a window
+        recorder.write(renderer.read_pixels())
+```
+
+Passes: directional shadow map, toon-lit meshes, alpha-cut sprites (they cast
+shadows and are hidden by walls through the depth buffer), blended particles, then
+the upscale. Needs `ffmpeg` on PATH to record. `examples/isekai_slice` is a full
+10 second scene.
+
 ### 2D games
 
 ```python
@@ -208,7 +243,7 @@ src/soragl/
   sim/         headless simulation helpers (clock, noise, grid, modifiers, cycles)
   system/      ECS core, world, game state, signals, animation, logging
   data/        shaders bundled with the package
-examples/      archer_demo (full demo), spatial_audio, net_demo
+examples/      archer_demo (full demo), spatial_audio, net_demo, isekai_slice (2.5D clip)
 tests/         unit/ (pure logic) and e2e/ (real pygame, mixer and OpenGL objects)
 docs/          architecture.md
 ```
