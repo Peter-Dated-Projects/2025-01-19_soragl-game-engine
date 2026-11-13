@@ -77,3 +77,19 @@ def test_shot_points_the_camera_at_the_target():
         (0, 0), abs=1e-5
     )  # centred
     assert camera.ortho_height == 8
+
+
+def test_shot_smooth_ease_is_default_and_needs_a_key():
+    shot = Shot([Key(0, (0, 0, 0)), Key(2, (4, 0, 0))])
+    assert shot.pose(0.5)[0].x == pytest.approx(4 * 0.15625)  # smoothstep(0.25)
+    assert shot.pose(1)[0].x == pytest.approx(2)
+    with pytest.raises(ValueError):
+        Shot([])
+
+
+def test_particle_rate_and_cap():
+    emitter = ParticleEmitter(rate=30, lifetime=(10, 10), max_particles=40)
+    emitter.update(0.5)
+    assert emitter.count == 15
+    emitter.burst(100)
+    assert emitter.count == 40
