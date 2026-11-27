@@ -25,7 +25,7 @@ def fit_viewport(
     """
     sw, sh = surface_size
     ww, wh = window_size
-    scale = min(ww / sw, wh / sh)
+    scale = max(ww / sw, wh / sh)
     if integer_scale and scale >= 1:
         scale = int(scale)
     w, h = max(1, round(sw * scale)), max(1, round(sh * scale))
